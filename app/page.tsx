@@ -6,10 +6,23 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Briefcase, LogOut, Upload } from "lucide-react";
-import { createClient, Session } from '@supabase/supabase-js';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Briefcase, LogOut } from "lucide-react";
+import { createClient, type Session as SupabaseSession } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -20,37 +33,39 @@ const formSchema = z.object({
   location: z.string().min(2, "Location must be at least 2 characters"),
   skill_level: z.string(),
   remote_preference: z.string(),
-  resume: z.instanceof(File).optional(),
 });
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
 );
 
 export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<SupabaseSession | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.push('/auth');
+    supabase.auth.getSession().then(({ data }) => {
+      const currentSession = data.session;
+      if (!currentSession) {
+        router.push("/auth");
       }
-      setSession(session);
+      setSession(currentSession);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) {
-        router.push('/auth');
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      if (!newSession) {
+        router.push("/auth");
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -73,34 +88,21 @@ export default function Home() {
         return;
       }
 
-      let resume_data = null;
-      if (values.resume) {
-        // Read file as text and sanitize it
-        const buffer = await values.resume.arrayBuffer();
-        const decoder = new TextDecoder('utf-8');
-        resume_data = decoder.decode(buffer)
-          .replace(/\u0000/g, '') // Remove null characters
-          .trim();
-      }
-
-      // Remove the resume file from the values before inserting into the database
-      const { resume, ...jobSearchData } = values;
-
-      const { data, error } = await supabase
-        .from('job_searches')
-        .insert([{
-          ...jobSearchData,
-          resume_data,
-          user_id: session.user.id
-        }])
+      const { data: inserted, error } = await supabase
+        .from("job_searches")
+        .insert([
+          {
+            ...values,
+            user_id: session.user.id,
+          },
+        ])
         .select();
-
       if (error) throw error;
 
       toast.success("Job search preferences saved successfully!");
       form.reset();
-    } catch (error) {
-      console.error('Form Submission Error:', error);
+    } catch (err) {
+      console.error("Form Submission Error:", err);
       toast.error("Failed to save job search preferences");
     } finally {
       setIsSubmitting(false);
@@ -109,7 +111,7 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push('/auth');
+    router.push("/auth");
   };
 
   if (!session) {
@@ -131,7 +133,9 @@ export default function Home() {
               <Briefcase className="text-primary-foreground w-6 h-6" />
             </div>
             <CardTitle className="text-2xl font-bold">Find Your Dream Job</CardTitle>
-            <p className="text-muted-foreground">Tell us about the job you're looking for</p>
+            <p className="text-muted-foreground">
+              Tell us about the job you're looking for
+            </p>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -232,33 +236,6 @@ export default function Home() {
                           <SelectItem value="flexible">Flexible</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="resume"
-                  render={({ field: { onChange, value, ...field } }) => (
-                    <FormItem>
-                      <FormLabel>Resume</FormLabel>
-                      <FormControl>
-                        <div className="flex items-center gap-4">
-                          <Input
-                            type="file"
-                            accept=".txt,.doc,.docx"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                onChange(file);
-                              }
-                            }}
-                            {...field}
-                          />
-                          <Upload className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
