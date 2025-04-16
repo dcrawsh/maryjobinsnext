@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Briefcase, LogOut, Upload } from "lucide-react";
-import { createClient } from '@supabase/supabase-js';
+import { createClient, Session } from '@supabase/supabase-js';
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -30,7 +30,7 @@ const supabase = createClient(
 
 export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
 
   useEffect(() => {
