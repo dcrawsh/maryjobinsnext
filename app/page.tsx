@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Briefcase, LogOut, Upload } from "lucide-react";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Briefcase, LogOut, Upload } from 'lucide-react';
 import { createClient, type Session } from '@supabase/supabase-js';
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
-  job_title: z.string().min(2, "Job title must be at least 2 characters"),
+  job_title: z.string().min(2, 'Job title must be at least 2 characters'),
   years_of_experience: z.string(),
-  location: z.string().min(2, "Location must be at least 2 characters"),
+  location: z.string().min(2, 'Location must be at least 2 characters'),
   skill_level: z.string(),
   remote_preference: z.string(),
   resume: z.instanceof(File).optional(),
@@ -42,27 +42,27 @@ export default function Home() {
       setSession(session);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!newSession) {
         router.push('/auth');
         return;
       }
-      setSession(session);
+      setSession(newSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      job_title: "",
-      years_of_experience: "",
-      location: "",
-      skill_level: "",
-      remote_preference: "",
+      job_title: '',
+      years_of_experience: '',
+      location: '',
+      skill_level: '',
+      remote_preference: '',
     },
   });
 
@@ -71,7 +71,7 @@ export default function Home() {
       setIsSubmitting(true);
 
       if (!session?.user) {
-        toast.error("Please sign in to save job preferences");
+        toast.error('Please sign in to save job preferences');
         return;
       }
 
@@ -88,20 +88,16 @@ export default function Home() {
 
       const { data, error } = await supabase
         .from('job_searches')
-        .insert([{
-          ...jobSearchData,
-          resume_data,
-          user_id: session.user.id
-        }])
+        .insert([{ ...jobSearchData, resume_data, user_id: session.user.id }])
         .select();
 
       if (error) throw error;
 
-      toast.success("Job search preferences saved successfully!");
+      toast.success('Job search preferences saved successfully!');
       form.reset();
     } catch (error) {
       console.error('Form Submission Error:', error);
-      toast.error("Failed to save job search preferences");
+      toast.error('Failed to save job search preferences');
     } finally {
       setIsSubmitting(false);
     }
@@ -240,7 +236,7 @@ export default function Home() {
                 <FormField
                   control={form.control}
                   name="resume"
-                  render={({ field: { onChange, value, ...field } }) => (
+                  render={({ field: { onChange, ...field } }) => (
                     <FormItem>
                       <FormLabel>Resume</FormLabel>
                       <FormControl>
@@ -250,9 +246,7 @@ export default function Home() {
                             accept=".txt,.doc,.docx"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
-                              if (file) {
-                                onChange(file);
-                              }
+                              if (file) onChange(file);
                             }}
                             {...field}
                           />
@@ -265,7 +259,7 @@ export default function Home() {
                 />
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Job Preferences"}
+                  {isSubmitting ? 'Saving...' : 'Save Job Preferences'}
                 </Button>
               </form>
             </Form>
