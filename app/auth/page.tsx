@@ -100,7 +100,7 @@ export default function AuthPage() {
       <div className="max-w-md mx-auto pt-8">
         <Card className="shadow-lg">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold">Mary Job Ins</CardTitle>
+            <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="space-y-4">
