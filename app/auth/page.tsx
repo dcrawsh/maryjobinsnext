@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from '@supabase/supabase-js';
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 
 const signUpSchema = z.object({
@@ -26,50 +26,48 @@ const signInSchema = z.object({
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const router = useRouter();
 
   const signUpForm = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const signInForm = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   async function onSignUp(values: z.infer<typeof signUpSchema>) {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
-        options: {
-          data: {
-            name: values.name,
-          },
-        },
+        options: { data: { name: values.name }, emailRedirectTo: `${window.location.origin}/auth` }
       });
 
       if (error) throw error;
-
-      toast.success("Account created successfully! Please sign in.");
+      // Switch to sign-in tab and show confirmation message
+      setActiveTab('signin');
+      toast.success("Please confirm your email to be able to sign in");
       signUpForm.reset();
-    } catch (error) {
-      console.error('Sign Up Error:', error);
-      toast.error("Failed to create account");
+    } catch (err: any) {
+      console.error('Sign Up Error:', err);
+      toast.error(err.message || "Failed to create account");
     } finally {
       setIsLoading(false);
     }
@@ -78,24 +76,32 @@ export default function AuthPage() {
   async function onSignIn(values: z.infer<typeof signInSchema>) {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('confirm')) {
+          toast.error("Please confirm your email address before signing in");
+          return;
+        }
+        throw error;
+      }
 
       toast.success("Signed in successfully!");
       router.push("/");
-    } catch (error) {
-      console.error('Sign In Error:', error);
-      toast.error("Invalid email or password");
+    } catch (err: any) {
+      console.error('Sign In Error:', err);
+      toast.error(err.message || "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
   }
- 
+
   return (
+    <>
+    <Toaster position="top-right" />
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4">
       <div className="max-w-md mx-auto pt-8">
         <Card className="shadow-lg">
@@ -103,7 +109,7 @@ export default function AuthPage() {
             <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -112,33 +118,25 @@ export default function AuthPage() {
               <TabsContent value="signin">
                 <Form {...signInForm}>
                   <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
-                    <FormField
-                      control={signInForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="Enter your email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={signInForm.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter your email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
 
-                    <FormField
-                      control={signInForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Enter your password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={signInForm.control} name="password" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Enter your password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
 
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Signing in..." : "Sign In"}
@@ -150,47 +148,35 @@ export default function AuthPage() {
               <TabsContent value="signup">
                 <Form {...signUpForm}>
                   <form onSubmit={signUpForm.handleSubmit(onSignUp)} className="space-y-4">
-                    <FormField
-                      control={signUpForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter your name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={signUpForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
 
-                    <FormField
-                      control={signUpForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" placeholder="Enter your email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={signUpForm.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter your email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
 
-                    <FormField
-                      control={signUpForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Create a password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={signUpForm.control} name="password" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Create a password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
 
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? "Creating account..." : "Create Account"}
@@ -203,5 +189,6 @@ export default function AuthPage() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

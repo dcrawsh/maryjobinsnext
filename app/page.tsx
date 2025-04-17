@@ -14,7 +14,6 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-// Define form schema without resume
 const formSchema = z.object({
   job_title: z.string().min(2, 'Job title must be at least 2 characters'),
   years_of_experience: z.string(),
