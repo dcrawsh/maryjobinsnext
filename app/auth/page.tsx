@@ -94,7 +94,7 @@ export default function AuthPage() {
       setIsLoading(false);
     }
   }
-
+ 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4">
       <div className="max-w-md mx-auto pt-8">
