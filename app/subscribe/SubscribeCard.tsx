@@ -8,7 +8,7 @@ interface Props {
   sessionUrl: string;
 }
 
-export default function SubscribeClient({ sessionUrl }: Props) {
+export default function SubscribeCard({ sessionUrl }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleClick = () => {

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "stripe": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -39,11 +40,12 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@stripe/stripe-js": "^7.1.0",
-    "@supabase/supabase-js": "^2.39.8",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@types/node": "20.6.2",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
-    "add": "^2.0.6",
     "autoprefixer": "10.4.15",
     "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.0",
