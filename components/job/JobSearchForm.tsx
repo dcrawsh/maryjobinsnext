@@ -1,0 +1,161 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseBrowser";
+import { useState } from "react";
+import { useSession } from "@/hooks/useSession";
+
+/* ────────── schema ────────── */
+const schema = z.object({
+  job_title: z.string().min(2),
+  years_of_experience: z.string(),
+  location: z.string().min(2),
+  skill_level: z.string(),
+  remote_preference: z.string(),
+});
+type FormValues = z.infer<typeof schema>;
+
+export default function JobSearchForm() {
+  const { session } = useSession();
+  const [saving, setSaving] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      job_title: "",
+      years_of_experience: "",
+      location: "",
+      skill_level: "",
+      remote_preference: "",
+    },
+  });
+
+  async function onSubmit(values: FormValues) {
+    if (!session?.user) {
+      toast.error("Please sign in");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from("job_searches")
+        .insert([{ ...values, user_id: session.user.id }]);
+      if (error) throw error;
+      toast.success("Preferences saved!");
+      form.reset();
+    } catch (err) {
+      toast.error("Could not save preferences");
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* job title */}
+        <FormField
+          control={form.control}
+          name="job_title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Job Title</FormLabel>
+              <FormControl><Input placeholder="e.g. Software Engineer" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* years of experience */}
+        <FormField
+          control={form.control}
+          name="years_of_experience"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Years of Experience</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="0-1">0‑1</SelectItem>
+                  <SelectItem value="1-3">1‑3</SelectItem>
+                  <SelectItem value="3-5">3‑5</SelectItem>
+                  <SelectItem value="5-10">5‑10</SelectItem>
+                  <SelectItem value="10+">10+</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* location */}
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Location</FormLabel>
+              <FormControl><Input placeholder="e.g. Portland, OR" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* skill level */}
+        <FormField
+          control={form.control}
+          name="skill_level"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Skill Level</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="entry">Entry</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="senior">Senior</SelectItem>
+                  <SelectItem value="lead">Lead</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* remote preference */}
+        <FormField
+          control={form.control}
+          name="remote_preference"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Remote Preference</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl><SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger></FormControl>
+                <SelectContent>
+                  <SelectItem value="remote">Remote</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="onsite">On‑site</SelectItem>
+                  <SelectItem value="flexible">Flexible</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={saving} className="w-full">
+          {saving ? "Saving…" : "Save Job Preferences"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
