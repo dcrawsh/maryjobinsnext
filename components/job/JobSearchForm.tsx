@@ -6,6 +6,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseBrowser";
@@ -19,6 +20,9 @@ const schema = z.object({
   location: z.string().min(2),
   skill_level: z.string(),
   remote_preference: z.string(),
+  resume_data: z
+  .string()
+  .min(10, "Please paste at least 10 characters of your resume"),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -34,6 +38,7 @@ export default function JobSearchForm() {
       location: "",
       skill_level: "",
       remote_preference: "",
+      resume_data: "",
     },
   });
 
@@ -147,6 +152,24 @@ export default function JobSearchForm() {
                   <SelectItem value="flexible">Flexible</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+          {/* resume */}
+          <FormField
+          control={form.control}
+          name="resume_data"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Resume</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Paste your resume text here"
+                  {...field}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
