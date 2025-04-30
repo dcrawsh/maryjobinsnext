@@ -11,8 +11,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
 });
 
-
-
 export default async function SubscribePage() {
 
   const supabase = await createClient()
@@ -27,7 +25,7 @@ export default async function SubscribePage() {
       userId: "", // Replace with actual user ID
     },
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/?canceled=true`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe?canceled=true`,
   });
 
   return (
