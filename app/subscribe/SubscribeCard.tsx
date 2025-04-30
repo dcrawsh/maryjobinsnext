@@ -1,19 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "@/hooks/useSession";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-interface Props {
-  sessionUrl: string;
-}
-
-export default function SubscribeCard({ sessionUrl }: Props) {
+export default function SubscribeCard() {
   const [loading, setLoading] = useState(false);
+  const { session } = useSession();
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    if (!session) return;
     setLoading(true);
-    window.location.assign(sessionUrl);
+
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setLoading(false);
+      return alert(`Error starting checkout:\n${body.error || res.statusText}`);
+    }
+
+    const { url } = await res.json();
+    window.location.assign(url);
   };
 
   return (

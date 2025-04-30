@@ -1,53 +1,62 @@
-// app/api/webhooks/stripe/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// init stripe with your secret
+export const config = { api: { bodyParser: false } };
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
 });
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
-// init supabase with service_role key
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: Request) {
-  const buf = await request.text();
-  const sig = request.headers.get("stripe-signature")!;
-  let event: Stripe.Event;
+export async function POST(req: Request) {
+  const payload = await req.text();
+  const sig = req.headers.get("stripe-signature")!;
 
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(buf, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(
+      payload,
+      sig,
+      process.env.STRIPE_SIGNING_SECRET!
+    );
   } catch (err: any) {
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    console.error("⚠️ Webhook signature error:", err.message);
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
-  // Only handle the session completion
+  console.log("🔔 Stripe event:", event.type, event.id);
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+    console.log("🔔 Session:", session);
 
-    // Pull out our metadata + subscription
     const userId = session.metadata?.userId;
-    const subscriptionId = session.subscription as string;
+    const customerId = session.customer as string;
 
-    if (userId && subscriptionId) {
-      // update your users table: set stripe_subscription = ..., status = 'active'
-      const { error } = await supabaseAdmin
+    if (userId) {
+      const { data, error } = await supabaseAdmin
         .from("profiles")
         .update({
-          stripe_subscription_id: subscriptionId,
           subscription_status: "active",
+          stripe_customer_id: customerId,
         })
         .eq("id", userId);
 
+      console.log("🔔 Supabase update result:", { data, error });
       if (error) {
-        console.error("Supabase update error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("❌ Supabase update error:", error);
+        return NextResponse.json(
+          { error: error.message },
+          { status: 500 }
+        );
       }
+    } else {
+      console.warn("⚠️ No userId in session metadata – skipping DB write");
     }
   }
 
