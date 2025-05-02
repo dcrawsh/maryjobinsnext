@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import animatePlugin from 'tailwindcss-animate';
 
 const config: Config = {
   darkMode: ['class'],
@@ -9,17 +10,18 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+      fontFamily: {
+        gibson: ['Gibson', 'sans-serif'],
+        body: ['Open Sans', 'sans-serif'],
       },
       colors: {
+        // MaryJobins Brand Palette
+        cream: '#F7F3E3',
+        charcoal: '#2E3532',
+        'cherry-red': '#D12C1F',
+        'deep-navy': '#0A2342',
+        'soft-yellow': '#F9D923',
+        // CSS Variable-driven Tokens
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -61,22 +63,23 @@ const config: Config = {
           '5': 'hsl(var(--chart-5))',
         },
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
       keyframes: {
         'accordion-down': {
-          from: {
-            height: '0',
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)',
-          },
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
         },
         'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)',
-          },
-          to: {
-            height: '0',
-          },
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
         },
       },
       animation: {
@@ -85,6 +88,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [animatePlugin],
 };
+
 export default config;
