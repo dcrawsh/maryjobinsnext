@@ -1,4 +1,3 @@
-// app/my-jobs/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -9,13 +8,13 @@ interface Job {
   job_id: string;
   title: string;
   company_name: string;
-  location: string;
-  job_type: string;
-  salary_currency: string;
-  salary_min: number | null;
-  salary_max: number | null;
-  application_url: string;
-  description: string;
+  location?: string;
+  job_type?: string;
+  salary_currency?: string;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  application_url?: string;
+  description?: string;
 }
 
 export default function MyJobsPage() {
@@ -30,7 +29,6 @@ export default function MyJobsPage() {
 
     const fetchJobs = async () => {
       try {
-        // 1) fetch intersection rows for this user
         const { data: rows, error: err1 } = await supabase
           .from('user_jobs')
           .select('job_id')
@@ -44,12 +42,20 @@ export default function MyJobsPage() {
           return;
         }
 
-        // 2) fetch job details with salary and description
         const { data: jobsData, error: err2 } = await supabase
           .from('jobs')
-          .select(
-            `job_id, title, company_name, location, job_type, salary_currency, salary_min, salary_max, application_url, description`
-          )
+          .select(`
+            job_id,
+            title,
+            company_name,
+            location,
+            job_type,
+            salary_currency,
+            salary_min,
+            salary_max,
+            application_url,
+            description
+          `)
           .in('job_id', jobIds);
         if (err2) throw err2;
 
@@ -84,38 +90,61 @@ export default function MyJobsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">My Jobs</h1>
-      <ul className="space-y-6">
+      <h1 className="text-2xl font-bold mb-6">My Saved Jobs</h1>
+      <ul className="grid gap-6">
         {jobs.map(job => (
-          <li key={job.job_id} className="p-6 border rounded-lg">
-            <h2 className="text-xl font-semibold mb-1">{job.title}</h2>
-            <p className="text-gray-700 mb-1">{job.company_name}</p>
-            <p className="text-gray-500 mb-2">
-              {job.location} · {job.job_type}
-            </p>
-            <p className="text-gray-800 mb-2">
-              Salary: {job.salary_currency}{job.salary_min != null ? job.salary_min : 'N/A'}
-              {job.salary_max != null ? ` - ${job.salary_currency}${job.salary_max}` : ''}
-            </p>
-            <button
-              className="text-sm text-blue-600 hover:underline mb-2"
-              onClick={() => toggleDescription(job.job_id)}
-            >
-              {expanded[job.job_id] ? 'Hide details' : 'See more'}
-            </button>
-            {expanded[job.job_id] && (
-              <p className="text-gray-600 mb-4 whitespace-pre-wrap">
-                {job.description}
+          <li key={job.job_id} className="rounded-xl border border-gray-200 shadow-sm p-6 bg-white">
+            <div className="mb-2">
+              <h2 className="text-xl font-semibold text-gray-900">{job.title || 'Untitled Role'}</h2>
+              {job.company_name && (
+                <p className="text-sm text-gray-700">{job.company_name}</p>
+              )}
+            </div>
+
+            {(job.location || job.job_type) && (
+              <p className="text-sm text-gray-500 mb-2">
+                {job.location}
+                {job.location && job.job_type && ' · '}
+                {job.job_type}
               </p>
             )}
-            <a
-              href={job.application_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Apply Now
-            </a>
+
+            {(job.salary_currency && (job.salary_min != null || job.salary_max != null)) && (
+              <p className="text-sm text-gray-800 mb-2">
+                Salary:&nbsp;
+                {job.salary_min != null ? `${job.salary_currency}${job.salary_min}` : 'N/A'}
+                {job.salary_max != null ? ` – ${job.salary_currency}${job.salary_max}` : ''}
+              </p>
+            )}
+
+            {job.description && (
+              <>
+                <button
+                  className="text-sm text-blue-600 hover:underline mb-2"
+                  onClick={() => toggleDescription(job.job_id)}
+                >
+                  {expanded[job.job_id] ? 'Hide details' : 'See more'}
+                </button>
+                {expanded[job.job_id] && (
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap mb-4">
+                    {job.description}
+                  </p>
+                )}
+              </>
+            )}
+
+            {job.application_url && (
+              <div>
+                <a
+                  href={job.application_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  Apply Now
+                </a>
+              </div>
+            )}
           </li>
         ))}
       </ul>
