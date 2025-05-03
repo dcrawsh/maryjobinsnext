@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
  * - Sign Out
  */
 export default function AccountPage() {
-  const { session, signOut } = useSession();
+  const { session, signOut } = useSession( { isProtectedRoute: false } );
   const userId = session?.user?.id;
 
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);

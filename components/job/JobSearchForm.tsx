@@ -1,15 +1,28 @@
+// components/job/JobSearchForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseBrowser";
 import { useState } from "react";
 import { useSession } from "@/hooks/useSession";
 
@@ -21,13 +34,13 @@ const schema = z.object({
   skill_level: z.string(),
   remote_preference: z.string(),
   resume_data: z
-  .string()
-  .min(10, "Please paste at least 10 characters of your resume"),
+    .string()
+    .min(10, "Please paste at least 10 characters of your resume"),
 });
 type FormValues = z.infer<typeof schema>;
 
 export default function JobSearchForm() {
-  const { session } = useSession();
+  const { session } = useSession({ isProtectedRoute: false });
   const [saving, setSaving] = useState(false);
 
   const form = useForm<FormValues>({
@@ -48,17 +61,43 @@ export default function JobSearchForm() {
       return;
     }
 
+    setSaving(true);
     try {
-      setSaving(true);
-      const { error } = await supabase
-        .from("job_searches")
-        .insert([{ ...values, user_id: session.user.id }]);
-      if (error) throw error;
-      toast.success("Preferences saved!");
+      const payload = {
+        user_id: session.user.id,
+        searches: [
+          {
+            job_title: values.job_title,
+            years_of_experience: values.years_of_experience,
+            location: values.location,
+            skill_level: values.skill_level,
+            remote_preference: values.remote_preference,
+            resume_data: values.resume_data,
+          },
+        ],
+      };
+
+      const res = await fetch("/api/process-searches", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.error("API error:", await res.text());
+        throw new Error("Job search failed");
+      }
+
+      const jobs = await res.json();
+      console.log("Fetched jobs:", jobs);
+      toast.success("Jobs fetched!");
       form.reset();
     } catch (err) {
-      toast.error("Could not save preferences");
       console.error(err);
+      toast.error("Could not fetch jobs");
     } finally {
       setSaving(false);
     }
@@ -74,7 +113,9 @@ export default function JobSearchForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Job Title</FormLabel>
-              <FormControl><Input placeholder="e.g. Software Engineer" {...field} /></FormControl>
+              <FormControl>
+                <Input placeholder="e.g. Software Engineer" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -88,12 +129,16 @@ export default function JobSearchForm() {
             <FormItem>
               <FormLabel>Years of Experience</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger></FormControl>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
-                  <SelectItem value="0-1">0‑1</SelectItem>
-                  <SelectItem value="1-3">1‑3</SelectItem>
-                  <SelectItem value="3-5">3‑5</SelectItem>
-                  <SelectItem value="5-10">5‑10</SelectItem>
+                  <SelectItem value="0-1">0 – 1</SelectItem>
+                  <SelectItem value="1-3">1 – 3</SelectItem>
+                  <SelectItem value="3-5">3 – 5</SelectItem>
+                  <SelectItem value="5-10">5 – 10</SelectItem>
                   <SelectItem value="10+">10+</SelectItem>
                 </SelectContent>
               </Select>
@@ -109,7 +154,9 @@ export default function JobSearchForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Location</FormLabel>
-              <FormControl><Input placeholder="e.g. Portland, OR" {...field} /></FormControl>
+              <FormControl>
+                <Input placeholder="e.g. Portland, OR" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -123,7 +170,11 @@ export default function JobSearchForm() {
             <FormItem>
               <FormLabel>Skill Level</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger></FormControl>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
                   <SelectItem value="entry">Entry</SelectItem>
                   <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -144,11 +195,15 @@ export default function JobSearchForm() {
             <FormItem>
               <FormLabel>Remote Preference</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger></FormControl>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select…" />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
                   <SelectItem value="remote">Remote</SelectItem>
                   <SelectItem value="hybrid">Hybrid</SelectItem>
-                  <SelectItem value="onsite">On‑site</SelectItem>
+                  <SelectItem value="onsite">On-site</SelectItem>
                   <SelectItem value="flexible">Flexible</SelectItem>
                 </SelectContent>
               </Select>
@@ -157,18 +212,15 @@ export default function JobSearchForm() {
           )}
         />
 
-          {/* resume */}
-          <FormField
+        {/* resume */}
+        <FormField
           control={form.control}
           name="resume_data"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Resume</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Paste your resume text here"
-                  {...field}
-                />
+                <Textarea placeholder="Paste your resume text here" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -176,7 +228,7 @@ export default function JobSearchForm() {
         />
 
         <Button type="submit" disabled={saving} className="w-full">
-          {saving ? "Saving…" : "Save Job Preferences"}
+          {saving ? "Sending…" : "Find Jobs"}
         </Button>
       </form>
     </Form>
