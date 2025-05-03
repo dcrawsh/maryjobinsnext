@@ -7,7 +7,7 @@ import { useSession } from "@/hooks/useSession";
 
 export default function Home() {
   const { session, signOut } = useSession();
-  if (!session) return null;      // optional spinner
+  if (!session) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4">
@@ -35,4 +35,3 @@ export default function Home() {
     </div>
   );
 }
- 

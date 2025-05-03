@@ -1,50 +1,54 @@
 // hooks/useSession.ts
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseBrowser";
-import type { Session } from "@supabase/supabase-js";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabaseBrowser';
+import type { Session } from '@supabase/supabase-js';
+
+type UseSessionOptions = {
+  isProtectedRoute?: boolean;
+};
 
 /**
- * Hook that
- * 1. Grabs the current Supabase session on mount.
- * 2. Redirects to /auth if no session.
- * 3. Listens for future auth changes.
- * 4. Exposes signOut().
+ * Hook that:
+ * - Retrieves the Supabase session.
+ * - Optionally redirects to /auth if unauthenticated.
+ * - Listens for future auth changes.
+ * - Exposes `signOut()` and `session`.
  */
-export function useSession() {
+export function useSession(options?: UseSessionOptions) {
+  const isProtectedRoute = options?.isProtectedRoute !== false;
   const [session, setSession] = useState<Session | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    // 1. initial check
+    let initialCheckComplete = false;
+
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace("/auth");
-      } else {
-        setSession(data.session);
+      const currentSession = data.session;
+      if (!currentSession && isProtectedRoute) {
+        router.replace('/auth');
       }
+      setSession(currentSession);
+      initialCheckComplete = true;
     });
 
-    // 2. subscribe to auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (!newSession) {
-        router.replace("/auth");
+      if (!newSession && isProtectedRoute && initialCheckComplete) {
+        router.replace('/auth');
       }
       setSession(newSession);
     });
 
-    // 3. clean up on unmount
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, isProtectedRoute]);
 
-  /** Sign out helper */
   const signOut = async () => {
     await supabase.auth.signOut();
-    router.replace("/auth");
+    router.replace('/auth');
   };
 
   return { session, signOut };
