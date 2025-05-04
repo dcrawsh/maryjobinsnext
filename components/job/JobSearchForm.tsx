@@ -97,10 +97,16 @@ export default function JobSearchForm() {
     },
     maxSize: 5 * 1024 * 1024, // 5 MB
     multiple: false,
-    onDropRejected: (rejections) => {
-      const msg = rejections[0].errors[0].message;
-      setFileError(msg);
-      toast.error(msg);
+    onDropRejected: (fileRejections) => {
+      const error = fileRejections[0].errors[0];
+      let message = 'Unsupported file type. Only PDF, DOCX, and TXT files are allowed.';
+    
+      if (error.code === 'file-too-large') {
+        message = 'File too large. Please upload a file smaller than 5MB.';
+      }
+    
+      setFileError(message);
+      toast.error(message);
     },
   });
 
