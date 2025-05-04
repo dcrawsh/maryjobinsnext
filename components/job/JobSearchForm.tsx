@@ -1,10 +1,10 @@
-// components/job/JobSearchForm.tsx
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useDropzone } from 'react-dropzone';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -12,19 +12,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import { useState } from "react";
-import { useSession } from "@/hooks/useSession";
+} from '@/components/ui/select';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import { useSession } from '@/hooks/useSession';
 
 /* ────────── schema ────────── */
 const schema = z.object({
@@ -35,29 +35,84 @@ const schema = z.object({
   remote_preference: z.string(),
   resume_data: z
     .string()
-    .min(10, "Please paste at least 10 characters of your resume"),
+    .min(10, 'Please paste at least 10 characters of your resume'),
 });
 type FormValues = z.infer<typeof schema>;
 
 export default function JobSearchForm() {
   const { session } = useSession({ isProtectedRoute: false });
   const [saving, setSaving] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [parsing, setParsing] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      job_title: "",
-      years_of_experience: "",
-      location: "",
-      skill_level: "",
-      remote_preference: "",
-      resume_data: "",
+      job_title: '',
+      years_of_experience: '',
+      location: '',
+      skill_level: '',
+      remote_preference: '',
+      resume_data: '',
+    },
+  });
+
+  // Dropzone config
+  const onDrop = async (files: File[]) => {
+    const file = files[0];
+    setFileError(null);
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    setParsing(true);
+    try {
+      const res = await fetch('/api/parse-resume', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Parsing failed');
+      form.setValue('resume_data', data.text);
+      toast.success('✅ Resume parsed! You can edit it below.');
+    } catch (err: any) {
+      console.error(err);
+      setFileError(err.message);
+      toast.error('Resume parsing failed. Please paste manually.');
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+  } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': [],
+      'application/msword': [],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [],
+      'text/plain': [],
+    },
+    maxSize: 5 * 1024 * 1024, // 5 MB
+    multiple: false,
+    onDropRejected: (fileRejections) => {
+      const error = fileRejections[0].errors[0];
+      let message = 'Unsupported file type. Only PDF, DOCX, and TXT files are allowed.';
+    
+      if (error.code === 'file-too-large') {
+        message = 'File too large. Please upload a file smaller than 5MB.';
+      }
+    
+      setFileError(message);
+      toast.error(message);
     },
   });
 
   async function onSubmit(values: FormValues) {
     if (!session?.user) {
-      toast.error("Please sign in");
+      toast.error('Please sign in');
       return;
     }
 
@@ -77,27 +132,27 @@ export default function JobSearchForm() {
         ],
       };
 
-      const res = await fetch("/api/process-searches", {
-        method: "POST",
+      const res = await fetch('/api/process-searches', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        console.error("API error:", await res.text());
-        throw new Error("Job search failed");
+        console.error('API error:', await res.text());
+        throw new Error('Job search failed');
       }
 
       const jobs = await res.json();
-      console.log("Fetched jobs:", jobs);
-      toast.success("Jobs fetched!");
+      console.log('Fetched jobs:', jobs);
+      toast.success('Jobs fetched!');
       form.reset();
     } catch (err) {
       console.error(err);
-      toast.error("Could not fetch jobs");
+      toast.error('Could not fetch jobs');
     } finally {
       setSaving(false);
     }
@@ -106,7 +161,7 @@ export default function JobSearchForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* job title */}
+        {/* Job Title */}
         <FormField
           control={form.control}
           name="job_title"
@@ -121,7 +176,7 @@ export default function JobSearchForm() {
           )}
         />
 
-        {/* years of experience */}
+        {/* Years of Experience */}
         <FormField
           control={form.control}
           name="years_of_experience"
@@ -147,7 +202,7 @@ export default function JobSearchForm() {
           )}
         />
 
-        {/* location */}
+        {/* Location */}
         <FormField
           control={form.control}
           name="location"
@@ -162,7 +217,7 @@ export default function JobSearchForm() {
           )}
         />
 
-        {/* skill level */}
+        {/* Skill Level */}
         <FormField
           control={form.control}
           name="skill_level"
@@ -187,7 +242,7 @@ export default function JobSearchForm() {
           )}
         />
 
-        {/* remote preference */}
+        {/* Remote Preference */}
         <FormField
           control={form.control}
           name="remote_preference"
@@ -212,15 +267,34 @@ export default function JobSearchForm() {
           )}
         />
 
-        {/* resume */}
+        {/* Resume Drag & Drop */}
         <FormField
           control={form.control}
           name="resume_data"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>Resume</FormLabel>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed p-6 text-center ${
+                  isDragActive ? 'border-blue-500' : 'border-gray-300'
+                } rounded`}
+              >
+                <input {...getInputProps()} />
+                {parsing
+                  ? 'Parsing your resume…'
+                  : isDragActive
+                  ? 'Drop it here!'
+                  : 'Drag & drop a PDF, DOCX, or TXT resume here, or click to select'}
+              </div>
+              {fileError && (
+                <p className="text-red-600 text-sm mt-1">{fileError}</p>
+              )}
               <FormControl>
-                <Textarea placeholder="Paste your resume text here" {...field} />
+                <Textarea
+                  placeholder="Or paste your resume text here"
+                  {...form.register('resume_data')}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -228,7 +302,7 @@ export default function JobSearchForm() {
         />
 
         <Button type="submit" disabled={saving} className="w-full">
-          {saving ? "Sending…" : "Find Jobs"}
+          {saving ? 'Sending…' : 'Find Jobs'}
         </Button>
       </form>
     </Form>
