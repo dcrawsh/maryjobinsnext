@@ -1,4 +1,16 @@
+'use client';
+
 import React from 'react';
+import {
+  DndContext,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import DroppableColumn from './kanban/DroppableColumn';
+import DraggableCard from './kanban/DraggableCard';
 import {
   CheckCircle,
   FileText,
@@ -17,6 +29,7 @@ interface Job {
 
 interface Props {
   jobs: Job[];
+  onStageChange?: (jobId: string, newStage: string) => void;
 }
 
 const STAGE_ICONS: Record<string, JSX.Element> = {
@@ -30,35 +43,44 @@ const STAGE_ICONS: Record<string, JSX.Element> = {
 
 const STAGES = ['none', 'applied', 'interviewing', 'offer', 'hired', 'rejected'];
 
-export default function JobKanbanView({ jobs }: Props) {
+export default function JobKanbanView({ jobs, onStageChange }: Props) {
+  const sensors = useSensors(useSensor(PointerSensor));
+
   const jobsByStage = STAGES.reduce<Record<string, Job[]>>((acc, stage) => {
-    acc[stage] = jobs.filter(job => (job.stage || 'none') === stage);
+    acc[stage] = jobs.filter((job) => (job.stage || 'none') === stage);
     return acc;
   }, {});
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!active?.id || !over?.id) return;
+
+    const jobId = String(active.id);
+    const newStage = String(over.id);
+
+    const job = jobs.find((j) => j.job_id === jobId);
+    if (!job || (job.stage || 'none') === newStage) return;
+
+    onStageChange?.(jobId, newStage);
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <div className="flex gap-4 w-[1200px]">
-        {STAGES.map(stage => (
-          <div key={stage} className="w-1/6 min-w-[180px] bg-gray-50 rounded-lg p-2 border">
-            <div className="flex items-center gap-2 font-semibold mb-2">
-              {STAGE_ICONS[stage]}
-              <span className="capitalize text-sm">{stage}</span>
-            </div>
-            <ul className="space-y-2">
-              {jobsByStage[stage].map(job => (
-                <li
-                  key={job.job_id}
-                  className="bg-white rounded border p-2 shadow-sm text-sm hover:bg-gray-50"
-                >
-                  <div className="font-medium text-gray-900 line-clamp-1">{job.title}</div>
-                  <div className="text-gray-500 line-clamp-1">{job.company_name}</div>
-                </li>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="overflow-x-auto">
+        <div className="flex gap-4 w-[1200px]">
+          {STAGES.map((stage) => (
+            <DroppableColumn key={stage} id={stage} title={stage} icon={STAGE_ICONS[stage]}>
+              {jobsByStage[stage].map((job) => (
+                <DraggableCard key={job.job_id} id={job.job_id} job={job} />
               ))}
-            </ul>
-          </div>
-        ))}
+            </DroppableColumn>
+          ))}
+        </div>
       </div>
-    </div>
+    </DndContext>
   );
 }

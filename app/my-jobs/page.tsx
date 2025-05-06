@@ -184,7 +184,26 @@ export default function MyJobsPage() {
       {filteredJobs.length === 0 ? (
         <div className="text-gray-500 text-sm">No jobs match your filters.</div>
       ) : kanbanView ? (
-        <JobKanbanView jobs={filteredJobs} />
+        <JobKanbanView
+  jobs={filteredJobs}
+  onStageChange={async (jobId, newStage) => {
+    const { error } = await supabase
+      .from('user_jobs')
+      .update({ stage: newStage })
+      .eq('user_id', session.user.id)
+      .eq('job_id', jobId);
+
+    if (!error) {
+      setJobs((prev) =>
+        prev.map((j) => (j.job_id === jobId ? { ...j, stage: newStage } : j))
+      );
+      toast.success('Stage updated');
+    } else {
+      toast.error('Error updating stage');
+    }
+  }}
+/>
+
       ) : (
         <ul className="space-y-6">
           {filteredJobs.map(job => (
