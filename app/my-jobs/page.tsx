@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useSession } from '@/hooks/useSession';
-import { supabase } from '@/lib/supabaseBrowser';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useEffect, useState, useMemo } from "react";
+import { useSession } from "@/hooks/useSession";
+import { supabase } from "@/lib/supabaseBrowser";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { toast } from "sonner";
 import {
   CheckCircle,
   FileText,
@@ -23,8 +23,8 @@ import {
   DollarSign,
   LayoutList,
   Columns3,
-} from 'lucide-react';
-import JobKanbanView from './JobKanbanView';
+} from "lucide-react";
+import JobKanbanView from "./JobKanbanView";
 
 interface Job {
   job_id: string;
@@ -51,12 +51,12 @@ const STAGE_ICONS: Record<string, JSX.Element> = {
 };
 
 const STAGE_COLORS: Record<string, string> = {
-  none: 'bg-gray-300',
-  applied: 'bg-blue-300',
-  interviewing: 'bg-yellow-300',
-  offer: 'bg-green-300',
-  hired: 'bg-purple-300',
-  rejected: 'bg-red-300',
+  none: "bg-gray-300",
+  applied: "bg-blue-300",
+  interviewing: "bg-yellow-300",
+  offer: "bg-green-300",
+  hired: "bg-purple-300",
+  rejected: "bg-red-300",
 };
 
 export default function MyJobsPage() {
@@ -65,10 +65,12 @@ export default function MyJobsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [sortBy, setSortBy] = useState<'newest' | 'salary' | 'title'>('newest');
-  const [filterStage, setFilterStage] = useState<string>('__all__');
-  const [filterStatus, setFilterStatus] = useState<'__active__' | 'not_interested' | 'not_relevant'>('__active__');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<"newest" | "salary" | "title">("newest");
+  const [filterStage, setFilterStage] = useState<string>("__all__");
+  const [filterStatus, setFilterStatus] = useState<
+    "__active__" | "not_interested" | "not_relevant"
+  >("__active__");
+  const [searchTerm, setSearchTerm] = useState("");
   const [kanbanView, setKanbanView] = useState(false);
 
   // Load jobs & user metadata
@@ -78,29 +80,31 @@ export default function MyJobsPage() {
       try {
         setLoading(true);
         const { data: rows, error: err1 } = await supabase
-          .from('user_jobs')
-          .select('job_id, status, stage')
-          .eq('user_id', session.user.id);
+          .from("user_jobs")
+          .select("job_id, status, stage")
+          .eq("user_id", session.user.id);
         if (err1) throw err1;
 
-        const ids = rows.map(r => r.job_id);
+        const ids = rows.map((r) => r.job_id);
         if (ids.length === 0) {
           setJobs([]);
           return;
         }
 
         const { data: jd, error: err2 } = await supabase
-          .from('jobs')
-          .select(`
+          .from("jobs")
+          .select(
+            `
             job_id, title, company_name, location, job_type,
             salary_currency, salary_min, salary_max,
             application_url, description
-          `)
-          .in('job_id', ids);
+          `
+          )
+          .in("job_id", ids);
         if (err2) throw err2;
 
-        const meta = Object.fromEntries(rows.map(r => [r.job_id, r]));
-        setJobs((jd || []).map(j => ({ ...j, ...meta[j.job_id] })));
+        const meta = Object.fromEntries(rows.map((r) => [r.job_id, r]));
+        setJobs((jd || []).map((j) => ({ ...j, ...meta[j.job_id] })));
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -110,32 +114,32 @@ export default function MyJobsPage() {
   }, [session]);
 
   const toggleDescription = (id: string) =>
-    setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const handleTrash = async (jobId: string) => {
-    if (!window.confirm('Are you sure you want to trash this job?')) return;
+    if (!window.confirm("Are you sure you want to trash this job?")) return;
     const { error } = await supabase
-      .from('user_jobs')
-      .update({ status: 'trash' })
-      .eq('user_id', session!.user.id)
-      .eq('job_id', jobId);
+      .from("user_jobs")
+      .update({ status: "trash" })
+      .eq("user_id", session!.user.id)
+      .eq("job_id", jobId);
     if (error) {
-      toast.error('Failed to trash');
+      toast.error("Failed to trash");
     } else {
-      setJobs(prev => prev.filter(j => j.job_id !== jobId));
-      toast.success('Moved to trash');
+      setJobs((prev) => prev.filter((j) => j.job_id !== jobId));
+      toast.success("Moved to trash");
     }
   };
 
   const filtered = useMemo(() => {
     return jobs
-      .filter(j => {
+      .filter((j) => {
         // never show true trash
-        if (j.status === 'trash') return false;
+        if (j.status === "trash") return false;
 
         // apply status filter
-        if (filterStatus === '__active__') {
-          if (j.status === 'not_interested' || j.status === 'not_relevant') {
+        if (filterStatus === "__active__") {
+          if (j.status === "not_interested" || j.status === "not_relevant") {
             return false;
           }
         } else {
@@ -145,15 +149,16 @@ export default function MyJobsPage() {
         }
 
         // stage & search logic
-        const byStage = filterStage === '__all__' || j.stage === filterStage;
+        const byStage = filterStage === "__all__" || j.stage === filterStage;
         const bySearch =
           j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           j.company_name.toLowerCase().includes(searchTerm.toLowerCase());
         return byStage && bySearch;
       })
       .sort((a, b) => {
-        if (sortBy === 'salary') return (b.salary_max || 0) - (a.salary_max || 0);
-        if (sortBy === 'title') return a.title.localeCompare(b.title);
+        if (sortBy === "salary")
+          return (b.salary_max || 0) - (a.salary_max || 0);
+        if (sortBy === "title") return a.title.localeCompare(b.title);
         return 0;
       });
   }, [jobs, filterStage, filterStatus, sortBy, searchTerm]);
@@ -184,11 +189,11 @@ export default function MyJobsPage() {
           type="text"
           placeholder="Search…"
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 min-w-[150px] px-3 py-1 border rounded focus:ring"
         />
 
-        <Select value={sortBy} onValueChange={v => setSortBy(v as any)}>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Sort" />
           </SelectTrigger>
@@ -211,7 +216,7 @@ export default function MyJobsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">All</SelectItem>
-            {Object.keys(STAGE_ICONS).map(s => (
+            {Object.keys(STAGE_ICONS).map((s) => (
               <SelectItem key={s} value={s}>
                 {STAGE_ICONS[s]} {s.charAt(0).toUpperCase() + s.slice(1)}
               </SelectItem>
@@ -219,7 +224,14 @@ export default function MyJobsPage() {
           </SelectContent>
         </Select>
 
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select
+          value={filterStatus}
+          onValueChange={(val: string) =>
+            setFilterStatus(
+              val as "__active__" | "not_interested" | "not_relevant"
+            )
+          }
+        >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Show…" />
           </SelectTrigger>
@@ -231,11 +243,15 @@ export default function MyJobsPage() {
         </Select>
 
         <button
-          onClick={() => setKanbanView(v => !v)}
+          onClick={() => setKanbanView((v) => !v)}
           className="flex-none flex items-center px-3 py-1 border rounded hover:bg-gray-50"
         >
-          {kanbanView ? <LayoutList className="mr-2" /> : <Columns3 className="mr-2" />}
-          {kanbanView ? 'List View' : 'Kanban View'}
+          {kanbanView ? (
+            <LayoutList className="mr-2" />
+          ) : (
+            <Columns3 className="mr-2" />
+          )}
+          {kanbanView ? "List View" : "Kanban View"}
         </button>
       </div>
 
@@ -247,24 +263,26 @@ export default function MyJobsPage() {
           jobs={filtered}
           onStageChange={async (jobId, newStage) => {
             const { error } = await supabase
-              .from('user_jobs')
+              .from("user_jobs")
               .update({ stage: newStage })
-              .eq('user_id', session.user.id)
-              .eq('job_id', jobId);
+              .eq("user_id", session.user.id)
+              .eq("job_id", jobId);
             if (!error) {
-              setJobs(prev =>
-                prev.map(j => (j.job_id === jobId ? { ...j, stage: newStage } : j))
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.job_id === jobId ? { ...j, stage: newStage } : j
+                )
               );
-              toast.success('Stage updated');
+              toast.success("Stage updated");
             } else {
-              toast.error('Error updating stage');
+              toast.error("Error updating stage");
             }
           }}
         />
       ) : (
         <ul className="mt-6 space-y-6">
           <AnimatePresence initial={false}>
-            {filtered.map(job => (
+            {filtered.map((job) => (
               <motion.li
                 key={job.job_id}
                 exit={{ opacity: 0, height: 0 }}
@@ -276,7 +294,11 @@ export default function MyJobsPage() {
                 "
               >
                 {/* Accent bar */}
-                <div className={`w-1 rounded-l-lg ${STAGE_COLORS[job.stage || 'none']}`} />
+                <div
+                  className={`w-1 rounded-l-lg ${
+                    STAGE_COLORS[job.stage || "none"]
+                  }`}
+                />
 
                 {/* Card body */}
                 <div className="flex-1 p-6 space-y-3">
@@ -293,10 +315,10 @@ export default function MyJobsPage() {
                         </span>
                         <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
                           {job.salary_currency}
-                          {job.salary_min ?? 'N/A'}
+                          {job.salary_min ?? "N/A"}
                           {job.salary_max != null
                             ? ` - ${job.salary_currency}${job.salary_max}`
-                            : ''}
+                            : ""}
                         </span>
                       </div>
                     </div>
@@ -308,7 +330,7 @@ export default function MyJobsPage() {
                     className="text-blue-600 hover:underline text-sm"
                     onClick={() => toggleDescription(job.job_id)}
                   >
-                    {expanded[job.job_id] ? 'Hide details' : 'See more'}
+                    {expanded[job.job_id] ? "Hide details" : "See more"}
                   </button>
 
                   {/* Animated Description */}
@@ -317,7 +339,7 @@ export default function MyJobsPage() {
                       <motion.div
                         key="desc"
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
+                        animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         className="text-gray-700 overflow-hidden"
@@ -334,24 +356,24 @@ export default function MyJobsPage() {
                         Status
                       </label>
                       <Select
-                        value={job.status || ''}
-                        onValueChange={async newStatus => {
+                        value={job.status || ""}
+                        onValueChange={async (newStatus) => {
                           const { error } = await supabase
-                            .from('user_jobs')
+                            .from("user_jobs")
                             .update({ status: newStatus })
-                            .eq('user_id', session.user.id)
-                            .eq('job_id', job.job_id);
+                            .eq("user_id", session.user.id)
+                            .eq("job_id", job.job_id);
                           if (!error) {
-                            setJobs(prev =>
-                              prev.map(j =>
+                            setJobs((prev) =>
+                              prev.map((j) =>
                                 j.job_id === job.job_id
                                   ? { ...j, status: newStatus }
                                   : j
                               )
                             );
-                            toast.success('Status updated');
+                            toast.success("Status updated");
                           } else {
-                            toast.error('Error updating status');
+                            toast.error("Error updating status");
                           }
                         }}
                       >
@@ -364,7 +386,9 @@ export default function MyJobsPage() {
                           <SelectItem value="not_interested">
                             Not Interested
                           </SelectItem>
-                          <SelectItem value="not_relevant">Not Relevant</SelectItem>
+                          <SelectItem value="not_relevant">
+                            Not Relevant
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -374,24 +398,24 @@ export default function MyJobsPage() {
                         Stage
                       </label>
                       <Select
-                        value={job.stage || ''}
-                        onValueChange={async newStage => {
+                        value={job.stage || ""}
+                        onValueChange={async (newStage) => {
                           const { error } = await supabase
-                            .from('user_jobs')
+                            .from("user_jobs")
                             .update({ stage: newStage })
-                            .eq('user_id', session.user.id)
-                            .eq('job_id', job.job_id);
+                            .eq("user_id", session.user.id)
+                            .eq("job_id", job.job_id);
                           if (!error) {
-                            setJobs(prev =>
-                              prev.map(j =>
+                            setJobs((prev) =>
+                              prev.map((j) =>
                                 j.job_id === job.job_id
                                   ? { ...j, stage: newStage }
                                   : j
                               )
                             );
-                            toast.success('Stage updated');
+                            toast.success("Stage updated");
                           } else {
-                            toast.error('Error updating stage');
+                            toast.error("Error updating stage");
                           }
                         }}
                       >
@@ -399,9 +423,9 @@ export default function MyJobsPage() {
                           <SelectValue placeholder="Select stage…" />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.keys(STAGE_ICONS).map(s => (
+                          {Object.keys(STAGE_ICONS).map((s) => (
                             <SelectItem key={s} value={s}>
-                              {STAGE_ICONS[s]}{' '}
+                              {STAGE_ICONS[s]}{" "}
                               {s.charAt(0).toUpperCase() + s.slice(1)}
                             </SelectItem>
                           ))}

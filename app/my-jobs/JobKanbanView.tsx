@@ -1,6 +1,4 @@
-'use client';
-
-import React from 'react';
+import React, { useState } from 'react';
 import {
   DndContext,
   closestCorners,
@@ -8,9 +6,11 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverEvent,
 } from '@dnd-kit/core';
 import DroppableColumn from './kanban/DroppableColumn';
 import DraggableCard from './kanban/DraggableCard';
+import { motion } from 'framer-motion';
 import {
   CheckCircle,
   FileText,
@@ -45,19 +45,25 @@ const STAGES = ['none', 'applied', 'interviewing', 'offer', 'hired', 'rejected']
 
 export default function JobKanbanView({ jobs, onStageChange }: Props) {
   const sensors = useSensors(useSensor(PointerSensor));
+  // track which column is currently being hovered
+  const [overId, setOverId] = useState<string | null>(null);
 
   const jobsByStage = STAGES.reduce<Record<string, Job[]>>((acc, stage) => {
     acc[stage] = jobs.filter((job) => (job.stage || 'none') === stage);
     return acc;
   }, {});
 
+  const handleDragOver = (event: DragOverEvent) => {
+    setOverId(event.over?.id ? String(event.over.id) : null);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setOverId(null);
     const { active, over } = event;
     if (!active?.id || !over?.id) return;
 
     const jobId = String(active.id);
     const newStage = String(over.id);
-
     const job = jobs.find((j) => j.job_id === jobId);
     if (!job || (job.stage || 'none') === newStage) return;
 
@@ -68,16 +74,33 @@ export default function JobKanbanView({ jobs, onStageChange }: Props) {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="overflow-x-auto">
-        <div className="flex gap-4 w-[1200px]">
+        <div className="flex gap-4 w-[1200px] py-6">
           {STAGES.map((stage) => (
-            <DroppableColumn key={stage} id={stage} title={stage} icon={STAGE_ICONS[stage]}>
-              {jobsByStage[stage].map((job) => (
-                <DraggableCard key={job.job_id} id={job.job_id} job={job} />
-              ))}
-            </DroppableColumn>
+            <motion.div
+              key={stage}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 * STAGES.indexOf(stage) }}
+              className="flex-shrink-0 w-64"
+            >
+              <DroppableColumn
+                id={stage}
+                title={stage}
+                icon={STAGE_ICONS[stage]}
+              >
+                {jobsByStage[stage].map((job) => (
+                  <DraggableCard
+                    key={job.job_id}
+                    id={job.job_id}
+                    job={job}
+                  />
+                ))}
+              </DroppableColumn>
+            </motion.div>
           ))}
         </div>
       </div>
