@@ -12,7 +12,8 @@ export default function Nav() {
   const items = [
     { label: 'Account', href: '/account' },
     { label: 'Job Search', href: '/' },
-    { label: 'Job Listings', href: '/my-jobs' }
+    { label: 'Job Listings', href: '/my-jobs' },
+    { label: 'Quiz', href: '/job-search-quiz' }
   ];
 
   return (
