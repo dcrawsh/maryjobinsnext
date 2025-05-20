@@ -4,6 +4,8 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/lib/supabaseBrowser";
 import { AnimatePresence, motion } from "framer-motion";
+import DOMPurify from "dompurify";
+
 import {
   Select,
   SelectTrigger,
@@ -26,6 +28,8 @@ import {
 } from "lucide-react";
 import JobKanbanView from "./JobKanbanView";
 
+
+const isHtml = (str: string) => /<\/?[a-z][\s\S]*>/i.test(str);
 interface Job {
   job_id: string;
   title: string;
@@ -295,9 +299,8 @@ export default function MyJobsPage() {
               >
                 {/* Accent bar */}
                 <div
-                  className={`w-1 rounded-l-lg ${
-                    STAGE_COLORS[job.stage || "none"]
-                  }`}
+                  className={`w-1 rounded-l-lg ${STAGE_COLORS[job.stage || "none"]
+                    }`}
                 />
 
                 {/* Card body */}
@@ -344,7 +347,18 @@ export default function MyJobsPage() {
                         transition={{ duration: 0.3 }}
                         className="text-gray-700 overflow-hidden"
                       >
-                        <p className="whitespace-pre-wrap">{job.description}</p>
+                        {isHtml(job.description) ? (
+                          /* Render raw HTML safely */
+                          <div
+                            className="prose max-w-none"
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(job.description),
+                            }}
+                          />
+                        ) : (
+                          /* Plain‑text fallback */
+                          <p className="whitespace-pre-wrap">{job.description}</p>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
