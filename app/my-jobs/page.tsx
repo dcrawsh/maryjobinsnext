@@ -35,10 +35,8 @@ interface Job {
   title: string;
   company_name: string;
   location: string;
-  job_type: string;
-  salary_currency: string;
-  salary_min: number | null;
-  salary_max: number | null;
+  job: string;
+  salary: string;
   application_url: string;
   description: string;
   status: string | null;
@@ -99,9 +97,8 @@ export default function MyJobsPage() {
           .from("jobs")
           .select(
             `
-            job_id, title, company_name, location, job_type,
-            salary_currency, salary_min, salary_max,
-            application_url, description
+            job_id, title, company_name, location,
+            salary, application_url, description
           `
           )
           .in("job_id", ids);
@@ -160,8 +157,6 @@ export default function MyJobsPage() {
         return byStage && bySearch;
       })
       .sort((a, b) => {
-        if (sortBy === "salary")
-          return (b.salary_max || 0) - (a.salary_max || 0);
         if (sortBy === "title") return a.title.localeCompare(b.title);
         return 0;
       });
@@ -314,14 +309,7 @@ export default function MyJobsPage() {
                           {job.location}
                         </span>
                         <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                          {job.job_type}
-                        </span>
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                          {job.salary_currency}
-                          {job.salary_min ?? "N/A"}
-                          {job.salary_max != null
-                            ? ` - ${job.salary_currency}${job.salary_max}`
-                            : ""}
+                         {job.salary}
                         </span>
                       </div>
                     </div>
