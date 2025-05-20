@@ -45,7 +45,7 @@ async function fetchTechTools(
     .schema(SCHEMA)
     .from("tools_and_technology")
     .select("onet_soc_code, t2_example")
-    .eq("t2_type", "Tools")
+    .eq("t2_type", "Technology")
     .in("onet_soc_code", codes)
     .limit(100);
 

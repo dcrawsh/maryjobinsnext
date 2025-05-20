@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -14,186 +14,208 @@ import {
 } from '@/components/ui/select';
 import { Briefcase } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
+import { useSession } from '@/hooks/useSession';
+import { toast } from 'sonner';
+
+// ────────── Types ──────────
+type QuizValues = {
+  job_title: string;
+  alternate_titles: string[];
+  tech_skills: string[];
+  years_of_experience: string;
+  location: string;
+  skill_level: string;
+  remote_preference: string;
+  resume_data: string;
+};
 
 type Step = {
   id: keyof QuizValues;
   title: string;
-  type: 'text' | 'related' | 'multi-select' | 'select';
-  label: string;
+  type: 'text' | 'related' | 'multi-select' | 'select' | 'file';
   placeholder?: string;
-  hint: string;
+  hint?: string;
+  options?: { value: string; label: string }[];
   max?: number;
 };
 
+// ────────── Steps ──────────
 const quizSteps: Step[] = [
-  {
-    id: 'job_title',
-    title: 'Your Ideal Role',
-    type: 'text',
-    label: 'What job title are you aiming for?',
-    placeholder: 'Software Engineer',
-    hint: 'Start typing; we’ll suggest related titles.',
+  { id: 'job_title', title: 'Your Ideal Role', type: 'text', placeholder: 'Software Engineer', hint: 'Start typing; we’ll suggest related titles.' },
+  { id: 'alternate_titles', title: 'Related Titles', type: 'related', hint: 'Select up to 3 related titles.', max: 3 },
+  { id: 'tech_skills', title: 'Your Tech Skills', type: 'multi-select', hint: 'Pick up to 5 technical skills.', max: 5 },
+  { id: 'years_of_experience', title: 'Experience Level', type: 'select', hint: 'Choose the range that matches you.', options: [
+      { value: '0-1', label: '0 – 1' },
+      { value: '1-3', label: '1 – 3' },
+      { value: '3-5', label: '3 – 5' },
+      { value: '5-10', label: '5 – 10' },
+      { value: '10+', label: '10+' },
+    ]
   },
-  {
-    id: 'related_titles',
-    title: 'Related Titles',
-    type: 'related',
-    label: 'Select up to 3 related titles',
-    hint: 'Pick titles you might also consider.',
-    max: 3,
+  { id: 'location', title: 'Location', type: 'text', placeholder: 'e.g. Portland, OR', hint: '' },
+  { id: 'skill_level', title: 'Skill Level', type: 'select', hint: 'How senior are you?', options: [
+      { value: 'entry', label: 'Entry' },
+      { value: 'intermediate', label: 'Intermediate' },
+      { value: 'senior', label: 'Senior' },
+      { value: 'lead', label: 'Lead' },
+    ]
   },
-  {
-    id: 'tech_skills',
-    title: 'Your Tech Skills',
-    type: 'multi-select',
-    label: 'Pick up to 5 technical skills',
-    hint: 'Select skills you have experience with.',
-    max: 5,
+  { id: 'remote_preference', title: 'Remote Preference', type: 'select', hint: 'Where would you like to work?', options: [
+      { value: 'remote', label: 'Remote' },
+      { value: 'hybrid', label: 'Hybrid' },
+      { value: 'onsite', label: 'On-site' },
+      { value: 'flexible', label: 'Flexible' },
+    ]
   },
-  {
-    id: 'experience',
-    title: 'Experience Level',
-    type: 'select',
-    label: 'Years of Experience',
-    hint: 'Choose the range that matches you.',
-  },
-  // remote, hybrid, on-site
-  // location
+  { id: 'resume_data', title: 'Your Resume', type: 'file', hint: 'Drag & drop a PDF here, or paste text below.' },
 ];
 
-type QuizValues = {
-  job_title: string;
-  related_titles: string[];
-  tech_skills: string[];
-  experience: string;
-};
-
 export default function JobSearchQuiz() {
+  const { session } = useSession({ isProtectedRoute: false });
   const [step, setStep] = useState(0);
   const [options, setOptions] = useState<{ code: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setValue,
-    getValues,
-  } = useForm<QuizValues>({
+  const { control, handleSubmit, watch, setValue, getValues } = useForm<QuizValues>({
     defaultValues: {
       job_title: '',
-      related_titles: [],
+      alternate_titles: [],
       tech_skills: [],
-      experience: '',
+      years_of_experience: '',
+      location: '',
+      skill_level: '',
+      remote_preference: '',
+      resume_data: '',
     },
   });
 
-  const jobTitle = watch('job_title');
-  const relatedCodes = watch('related_titles');
   const current = quizSteps[step];
+  const jobTitle = watch('job_title');
+  const altCodes = watch('alternate_titles');
 
+  // ──────── Fetch suggestions ────────
   useEffect(() => {
     let url: string | null = null;
-
-    if (current.id === 'related_titles') {
-      if (jobTitle.trim().length < 2) {
-        setOptions([]);
-        return;
-      }
+    if (current.id === 'alternate_titles') {
+      if (jobTitle.trim().length < 2) return setOptions([]);
       url = `/api/alternate-titles?query=${encodeURIComponent(jobTitle.trim())}`;
     } else if (current.id === 'tech_skills') {
-      if (!jobTitle.trim()) {
-        setOptions([]);
-        return;
-      }
-      const params = new URLSearchParams();
-      params.set('title', jobTitle.trim());
-      if (relatedCodes.length) {
-        params.set('codes', relatedCodes.join(','));
-      }
+      if (!jobTitle.trim()) return setOptions([]);
+      const params = new URLSearchParams({ title: jobTitle.trim() });
+      if (altCodes.length) params.set('codes', altCodes.join(','));
       url = `/api/tech-skills?${params.toString()}`;
     } else {
-      setOptions([]);
-      return;
+      return setOptions([]);
     }
 
     setLoading(true);
     fetch(url)
       .then((res) => res.json())
       .then((body) => {
-        if ('titles' in body) {
-          setOptions(
-            body.titles.map((t: string) => ({ code: t, name: t }))
-          );
-        } else if ('tools' in body) {
-            setOptions(body.tools);
-          } else {
-            setOptions([]);
-          }
+        if (body.titles) {
+          setOptions(body.titles.map((t: string) => ({ code: t, name: t })));
+        } else if (body.tools) {
+          setOptions(body.tools);
+        } else {
+          setOptions([]);
+        }
       })
       .catch(() => setOptions([]))
       .finally(() => setLoading(false));
-  }, [current.id, jobTitle, relatedCodes]);
+  }, [current.id, jobTitle, altCodes]);
 
+  // ──────── Resume dropzone ────────
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (files) => console.log('AI takeover with', files[0]),
+    onDrop: async (files) => {
+      const file = files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/parse-resume', { method: 'POST', body: formData });
+        const body = await res.json();
+        setValue('resume_data', body.text);
+      } catch {}
+    },
     multiple: false,
     accept: { 'application/pdf': [], 'text/plain': [] },
   });
 
-  const onNext = (data: QuizValues) => {
+  // ──────── Handle next & submit ────────
+  const onNext = async (data: QuizValues) => {
     if (
-      (current.id === 'related_titles' && data.related_titles.length === 0) ||
+      (current.id === 'alternate_titles' && data.alternate_titles.length === 0) ||
       (current.id === 'tech_skills' && data.tech_skills.length === 0)
     ) {
       return;
     }
+
     setValue(current.id, data[current.id]);
-    if (step < quizSteps.length - 1) {
-      setStep(step + 1);
-    } else {
-      console.log('Final quiz values:', getValues());
+
+    if (step === quizSteps.length - 1) {
+      if (!session?.access_token) {
+        toast.error('Please sign in to continue');
+        return;
+      }
+      try {
+        const payload = { searches: [getValues()] };
+        const res = await fetch('/api/process-searches', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const jobs = await res.json();
+        toast.success(`Found ${jobs.length} jobs!`);
+        console.log('Jobs:', jobs);
+      } catch (err: any) {
+        console.error(err);
+        toast.error('Failed to fetch jobs');
+      }
+      return;
     }
+
+    setStep((prev) => prev + 1);
   };
 
+  // ──────── Render field ────────
   const renderField = () => {
     switch (current.type) {
       case 'text':
         return (
           <Controller
-            name="job_title"
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <Input {...field} placeholder={current.placeholder} />
-            )}
-          />
-        );
-
-      case 'related':
-      case 'multi-select':
-        return loading ? (
-          <p>Loading…</p>
-        ) : (
-          <Controller
             name={current.id}
             control={control}
+            rules={{ required: true }}
+            render={({ field }) => <Input {...field} placeholder={current.placeholder} />}
+          />
+        );
+      case 'related':
+        if (loading) return <p>Loading…</p>;
+        return (
+          <Controller
+            name="alternate_titles"
+            control={control}
             render={({ field }) => (
-              <div className="grid grid-cols-1 gap-2">
+              <div className="max-h-60 overflow-y-auto space-y-2">
                 {options.map((opt) => {
-                  const selected = field.value.includes(opt.code);
+                  const val = opt.name;
+                  const selected = field.value.includes(val);
                   const toggle = () => {
                     const next = selected
-                      ? Array.isArray(field.value) ? field.value.filter((c: string) => c !== opt.code) : []
-                      : [...(Array.isArray(field.value) ? field.value : []), opt.code].slice(0, current.max);
+                      ? field.value.filter((v) => v !== val)
+                      : [...field.value, val].slice(0, current.max);
                     field.onChange(next);
                   };
                   return (
                     <button
-                      key={opt.code}
+                      key={val}
                       type="button"
                       onClick={toggle}
-                      className={`px-3 py-2 border rounded w-full text-left ${
+                      className={`w-full text-left px-3 py-2 border rounded ${
                         selected
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-white hover:bg-gray-50'
@@ -207,11 +229,46 @@ export default function JobSearchQuiz() {
             )}
           />
         );
-
+      case 'multi-select':
+        if (loading) return <p>Loading…</p>;
+        return (
+          <Controller
+            name="tech_skills"
+            control={control}
+            render={({ field }) => (
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {options.map((opt) => {
+                  const val = opt.name;
+                  const selected = field.value.includes(val);
+                  const toggle = () => {
+                    const next = selected
+                      ? field.value.filter((v) => v !== val)
+                      : [...field.value, val].slice(0, current.max);
+                    field.onChange(next);
+                  };
+                  return (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={toggle}
+                      className={`w-full text-left px-3 py-2 border rounded ${
+                        selected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      {opt.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          />
+        );
       case 'select':
         return (
           <Controller
-            name="experience"
+            name={current.id}
             control={control}
             rules={{ required: true }}
             render={({ field }) => (
@@ -220,9 +277,9 @@ export default function JobSearchQuiz() {
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {['0-1', '1-3', '3-5', '5-10', '10+'].map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {opt}
+                  {current.options?.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -230,7 +287,34 @@ export default function JobSearchQuiz() {
             )}
           />
         );
-
+      case 'file':
+        return (
+          <>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed p-6 text-center ${
+                isDragActive ? 'border-blue-500' : 'border-gray-300'
+              } rounded`}
+            >
+              <input {...getInputProps()} />
+              {isDragActive
+                ? 'Drop your resume…'
+                : 'Drag & drop a PDF here, or click to upload'}
+            </div>
+            <Controller
+              name="resume_data"
+              control={control}
+              rules={{ minLength: 10 }}
+              render={({ field }) => (
+                <textarea
+                  {...field}
+                  placeholder="Or paste your resume text here"
+                  className="w-full border p-2 rounded mt-2"
+                />
+              )}
+            />
+          </>
+        );
       default:
         return null;
     }
@@ -262,7 +346,7 @@ export default function JobSearchQuiz() {
           <Briefcase className="w-8 h-8 text-primary" />
         </div>
         <h2 className="text-xl font-bold text-center">{current.title}</h2>
-        <p className="text-sm text-muted-foreground">{current.hint}</p>
+        {current.hint && <p className="text-sm text-muted-foreground">{current.hint}</p>}
 
         <form onSubmit={handleSubmit(onNext)} className="space-y-4">
           {renderField()}
@@ -270,16 +354,6 @@ export default function JobSearchQuiz() {
             {step < quizSteps.length - 1 ? 'Next' : 'Finish'}
           </Button>
         </form>
-
-        <div
-          {...getRootProps()}
-          className="mt-4 text-center border-2 border-dashed p-4 rounded"
-        >
-          <input {...getInputProps()} />
-          {isDragActive
-            ? 'Drop resume for AI magic…'
-            : 'Drag & drop resume here for AI magic'}
-        </div>
       </motion.div>
     </div>
   );

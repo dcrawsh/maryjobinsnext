@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     };
 
     const externalRes = await fetch(
-      "https://api.maryjobbins.com/process-searches",
+      "https://maryjobbins.com/process-searches",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
