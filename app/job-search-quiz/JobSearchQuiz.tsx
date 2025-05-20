@@ -272,7 +272,7 @@ export default function JobSearchQuiz() {
             control={control}
             rules={{ required: true }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value as string}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select…" />
                 </SelectTrigger>
