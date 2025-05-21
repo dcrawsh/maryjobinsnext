@@ -5,7 +5,6 @@ import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/lib/supabaseBrowser";
 import { AnimatePresence, motion } from "framer-motion";
 import DOMPurify from "dompurify";
- 
 import {
   Select,
   SelectTrigger,
@@ -27,7 +26,6 @@ import {
   Columns3,
 } from "lucide-react";
 import JobKanbanView from "./JobKanbanView";
-
 
 const isHtml = (str: string) => /<\/?[a-z][\s\S]*>/i.test(str);
 interface Job {
@@ -294,8 +292,9 @@ export default function MyJobsPage() {
               >
                 {/* Accent bar */}
                 <div
-                  className={`w-1 rounded-l-lg ${STAGE_COLORS[job.stage || "none"]
-                    }`}
+                  className={`w-1 rounded-l-lg ${
+                    STAGE_COLORS[job.stage || "none"]
+                  }`}
                 />
 
                 {/* Card body */}
@@ -305,12 +304,16 @@ export default function MyJobsPage() {
                       <h2 className="text-xl font-semibold">{job.title}</h2>
                       <p className="text-gray-600">{job.company_name}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                          {job.location}
-                        </span>
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                         {job.salary}
-                        </span>
+                        {job.location && (
+                          <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
+                            {job.location}
+                          </span>
+                        )}
+                        {job.salary && (
+                          <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
+                            {job.salary}
+                          </span>
+                        )}
                       </div>
                     </div>
                     {job.stage && STAGE_ICONS[job.stage]}
@@ -345,7 +348,9 @@ export default function MyJobsPage() {
                           />
                         ) : (
                           /* Plain‑text fallback */
-                          <p className="whitespace-pre-wrap">{job.description}</p>
+                          <p className="whitespace-pre-wrap">
+                            {job.description}
+                          </p>
                         )}
                       </motion.div>
                     )}
