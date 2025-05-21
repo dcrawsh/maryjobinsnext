@@ -16,7 +16,7 @@ export default function DroppableColumn({ id, title, icon, children }: Props) {
   return (
     <div
       ref={setNodeRef}
-      className={`w-1/6 min-w-[180px] rounded-lg p-2 border transition-colors ${
+      className={`w-full rounded-lg p-2 border transition-colors ${
         isOver ? 'bg-blue-50' : 'bg-gray-50'
       }`}
     >
