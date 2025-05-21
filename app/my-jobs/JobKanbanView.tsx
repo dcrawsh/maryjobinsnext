@@ -1,6 +1,7 @@
 "use client";
+
 import React, { useState } from "react";
-import { 
+import {
   DndContext,
   closestCorners,
   PointerSensor,
@@ -12,42 +13,66 @@ import {
 import DroppableColumn from "./kanban/DroppableColumn";
 import DraggableCard from "./kanban/DraggableCard";
 import { motion } from "framer-motion";
-import { Hourglass, FileText, UserCheck, DollarSign, CheckCircle, Ban } from "lucide-react";
-import type { Job, JobStage } from "@/types/my-jobs";
+import type { Job, JobStatus, JobStage } from "@/types/my-jobs";
+import {
+  STAGE_COLORS,
+  KANBAN_STATUSES,
+  KANBAN_LABELS,
+  KANBAN_ICONS,
+  KANBAN_STAGES,
+  KANBAN_STAGE_LABELS,
+  KANBAN_STAGE_ICONS,
+} from "./constants";
+
+export type KanbanViewMode = "status" | "stage";
 
 interface Props {
   jobs: Job[];
-  onStageChange?: (jobId: string, newStage: JobStage) => Promise<boolean>;
+  mode: KanbanViewMode;
+  onStatusChange: (jobId: string, status: JobStatus) => Promise<boolean>;
+  onStageChange?: (jobId: string, stage: JobStage) => Promise<boolean>;
+  onArchive?: (jobId: string) => Promise<boolean>;
+  onSave?: (jobId: string) => Promise<boolean>;
 }
 
-const STAGES: JobStage[] = ["none", "applied", "interviewing", "offer", "hired", "rejected"];
-const STAGE_ICONS: Record<JobStage, JSX.Element> = {
-  none: <Hourglass className="h-4 w-4 text-gray-500" />,
-  applied: <FileText className="h-4 w-4 text-blue-500" />,
-  interviewing: <UserCheck className="h-4 w-4 text-yellow-500" />,
-  offer: <DollarSign className="h-4 w-4 text-green-500" />,
-  hired: <CheckCircle className="h-4 w-4 text-emerald-600" />,
-  rejected: <Ban className="h-4 w-4 text-red-500" />,
-};
-
-export default function JobKanbanView({ jobs, onStageChange }: Props) {
+export default function JobKanbanView({
+  jobs,
+  mode,
+  onStatusChange,
+  onStageChange,
+  onArchive,
+  onSave,
+}: Props) {
   const sensors = useSensors(useSensor(PointerSensor));
   const [overId, setOverId] = useState<string | null>(null);
-  const jobsByStage = STAGES.reduce((acc, stage) => {
-    acc[stage] = jobs.filter((j) => (j.stage || "none") === stage);
-    return acc;
-  }, {} as Record<JobStage, Job[]>);
 
-  const handleDragOver = (e: DragOverEvent) => setOverId(e.over?.id ? String(e.over.id) : null);
+  // Choose lanes, labels, and icons based on mode
+  const lanes = mode === "status" ? KANBAN_STATUSES : KANBAN_STAGES;
+  const labels = mode === "status" ? KANBAN_LABELS : KANBAN_STAGE_LABELS;
+  const icons = mode === "status" ? KANBAN_ICONS : KANBAN_STAGE_ICONS;
+  const groupKey = mode === "status" ? "status" : "stage";
+
+  // Group jobs by selected key
+  const jobsByLane = lanes.reduce<Record<string, Job[]>>((acc, lane) => {
+    acc[lane] = jobs.filter((job) => (job as any)[groupKey] === lane);
+    return acc;
+  }, {} as Record<string, Job[]>);
+
+  const handleDragOver = (e: DragOverEvent) =>
+    setOverId(e.over?.id ? String(e.over.id) : null);
+
   const handleDragEnd = (e: DragEndEvent) => {
     setOverId(null);
     const { active, over } = e;
-    if (!active?.id || !over?.id) return;
+    if (!active.id || !over?.id) return;
     const jobId = String(active.id);
-    const newStage = over.id as JobStage;
-    const job = jobs.find((j) => j.job_id === jobId);
-    if (!job || (job.stage || "none") === newStage) return;
-    onStageChange?.(jobId, newStage);
+    const newLane = over.id as string;
+
+    if (mode === "status") {
+      onStatusChange(jobId, newLane as JobStatus);
+    } else if (onStageChange) {
+      onStageChange(jobId, newLane as JobStage);
+    }
   };
 
   return (
@@ -58,19 +83,30 @@ export default function JobKanbanView({ jobs, onStageChange }: Props) {
       onDragEnd={handleDragEnd}
     >
       <div className="overflow-x-auto">
-        {/* Use CSS grid for uniform columns */}
-        <div className="grid grid-flow-col  gap-2 py-6">
-          {STAGES.map((stage) => (
+        <div className="grid grid-flow-col auto-cols-[16rem] gap-4 py-6">
+          {lanes.map((lane) => (
             <motion.div
-              key={stage}
+              key={lane}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * STAGES.indexOf(stage) }}
-              className="flex h-full"
+              transition={{ delay: 0.05 * lanes.indexOf(lane) }}
+              className="flex flex-col h-full"
             >
-              <DroppableColumn id={stage} title={stage} icon={STAGE_ICONS[stage]}>
-                {jobsByStage[stage].map((job) => (
-                  <DraggableCard key={job.job_id} id={job.job_id} job={job} />
+              <DroppableColumn
+                id={lane}
+                title={labels[lane]}
+                icon={icons[lane]}
+              >
+                {jobsByLane[lane]?.map((job) => (
+                  <DraggableCard
+                    key={job.job_id}
+                    id={job.job_id}
+                    job={job}
+                    onSave={onSave ? () => onSave(job.job_id) : undefined}
+                    onArchive={
+                      onArchive ? () => onArchive(job.job_id) : undefined
+                    }
+                  />
                 ))}
               </DroppableColumn>
             </motion.div>

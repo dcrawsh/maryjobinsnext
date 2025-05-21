@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseBrowser";
 import { useSession } from "@/hooks/useSession";
@@ -5,13 +7,14 @@ import { toast } from "sonner";
 import type { Job, JobStage, JobStatus } from "@/types/my-jobs";
 
 /**
- * Hook that manages fetching and updating user jobs.
+ * Hook that manages fetching, updating, and tracking new job count.
  */
 export function useJobs() {
   const { session } = useSession();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [newCount, setNewCount] = useState<number>(0);
 
   const fetchJobs = useCallback(async () => {
     if (!session) return;
@@ -19,7 +22,6 @@ export function useJobs() {
     setError(null);
 
     try {
-      // Fetch user_job metadata
       const { data: metaRows, error: metaError } = await supabase
         .from("user_jobs")
         .select("job_id, status, stage")
@@ -29,10 +31,10 @@ export function useJobs() {
       const ids = metaRows.map((r) => r.job_id);
       if (ids.length === 0) {
         setJobs([]);
+        setNewCount(0);
         return;
       }
 
-      // Fetch full job details
       const { data: jobRows, error: jobError } = await supabase
         .from("jobs")
         .select(
@@ -41,14 +43,16 @@ export function useJobs() {
         .in("job_id", ids);
       if (jobError) throw jobError;
 
-      // Merge metadata into job objects
       const metaMap = Object.fromEntries(
         metaRows.map((r) => [r.job_id, r])
       );
+      const merged: Job[] = (jobRows || []).map((job) => ({
+        ...job,
+        ...metaMap[job.job_id],
+      }));
 
-      setJobs(
-        (jobRows || []).map((job) => ({ ...job, ...metaMap[job.job_id] }))
-      );
+      setJobs(merged);
+      setNewCount(merged.filter((j) => j.status === "new").length);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -61,7 +65,7 @@ export function useJobs() {
   }, [fetchJobs]);
 
   const updateStatus = useCallback(
-    async (jobId: string, status: JobStatus) => {
+    async (jobId: string, status: JobStatus): Promise<boolean> => {
       if (!session) return false;
       const { error } = await supabase
         .from("user_jobs")
@@ -72,17 +76,15 @@ export function useJobs() {
         toast.error("Error updating status");
         return false;
       }
-      setJobs((prev) =>
-        prev.map((j) => (j.job_id === jobId ? { ...j, status } : j))
-      );
+      await fetchJobs();
       toast.success("Status updated");
       return true;
     },
-    [session]
+    [session, fetchJobs]
   );
 
   const updateStage = useCallback(
-    async (jobId: string, stage: JobStage) => {
+    async (jobId: string, stage: JobStage): Promise<boolean> => {
       if (!session) return false;
       const { error } = await supabase
         .from("user_jobs")
@@ -93,34 +95,57 @@ export function useJobs() {
         toast.error("Error updating stage");
         return false;
       }
-      setJobs((prev) =>
-        prev.map((j) => (j.job_id === jobId ? { ...j, stage } : j))
-      );
+      await fetchJobs();
       toast.success("Stage updated");
       return true;
     },
-    [session]
+    [session, fetchJobs]
   );
 
-  const trashJob = useCallback(
-    async (jobId: string) => {
-      const success = await updateStatus(jobId, "trash");
-      if (success) {
-        setJobs((prev) => prev.filter((j) => j.job_id !== jobId));
-        toast.success("Moved to trash");
-      }
-      return success;
-    },
+  // granular archive actions for analytics
+  const markNotInterested = useCallback(
+    async (jobId: string): Promise<boolean> =>
+      updateStatus(jobId, "not_interested"),
     [updateStatus]
+  );
+
+  const markNotRelevant = useCallback(
+    async (jobId: string): Promise<boolean> =>
+      updateStatus(jobId, "not_relevant"),
+    [updateStatus]
+  );
+
+  const trashJob = markNotRelevant;
+
+  const markAllSeen = useCallback(
+    async (): Promise<boolean> => {
+      if (!session) return false;
+      const { error } = await supabase
+        .from("user_jobs")
+        .update({ status: "saved" })
+        .eq("user_id", session.user.id)
+        .eq("status", "new");
+      if (error) {
+        toast.error("Error marking all seen");
+        return false;
+      }
+      await fetchJobs();
+      return true;
+    },
+    [session, fetchJobs]
   );
 
   return {
     jobs,
     loading,
     error,
+    newCount,
     refresh: fetchJobs,
     updateStatus,
     updateStage,
+    markNotInterested,
+    markNotRelevant,
     trashJob,
+    markAllSeen,
   };
 }

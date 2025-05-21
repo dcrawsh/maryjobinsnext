@@ -22,8 +22,7 @@ export type JobStatus =
   | "new"
   | "saved"
   | "not_interested"
-  | "not_relevant"
-  | "trash";
+  | "not_relevant";
 
 /**
  * All possible application stages for a job.
