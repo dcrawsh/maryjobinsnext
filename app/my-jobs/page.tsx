@@ -5,7 +5,6 @@ import { useSession } from "@/hooks/useSession";
 import { supabase } from "@/lib/supabaseBrowser";
 import { AnimatePresence, motion } from "framer-motion";
 import DOMPurify from "dompurify";
- 
 import {
   Select,
   SelectTrigger,
@@ -28,17 +27,13 @@ import {
 } from "lucide-react";
 import JobKanbanView from "./JobKanbanView";
 
-
 const isHtml = (str: string) => /<\/?[a-z][\s\S]*>/i.test(str);
 interface Job {
   job_id: string;
   title: string;
   company_name: string;
   location: string;
-  job_type: string;
-  salary_currency: string;
-  salary_min: number | null;
-  salary_max: number | null;
+  salary: string;
   application_url: string;
   description: string;
   status: string | null;
@@ -99,9 +94,8 @@ export default function MyJobsPage() {
           .from("jobs")
           .select(
             `
-            job_id, title, company_name, location, job_type,
-            salary_currency, salary_min, salary_max,
-            application_url, description
+            job_id, title, company_name, location,
+            salary, application_url, description
           `
           )
           .in("job_id", ids);
@@ -160,8 +154,6 @@ export default function MyJobsPage() {
         return byStage && bySearch;
       })
       .sort((a, b) => {
-        if (sortBy === "salary")
-          return (b.salary_max || 0) - (a.salary_max || 0);
         if (sortBy === "title") return a.title.localeCompare(b.title);
         return 0;
       });
@@ -299,8 +291,9 @@ export default function MyJobsPage() {
               >
                 {/* Accent bar */}
                 <div
-                  className={`w-1 rounded-l-lg ${STAGE_COLORS[job.stage || "none"]
-                    }`}
+                  className={`w-1 rounded-l-lg ${
+                    STAGE_COLORS[job.stage || "none"]
+                  }`}
                 />
 
                 {/* Card body */}
@@ -310,19 +303,16 @@ export default function MyJobsPage() {
                       <h2 className="text-xl font-semibold">{job.title}</h2>
                       <p className="text-gray-600">{job.company_name}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                          {job.location}
-                        </span>
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                          {job.job_type}
-                        </span>
-                        <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
-                          {job.salary_currency}
-                          {job.salary_min ?? "N/A"}
-                          {job.salary_max != null
-                            ? ` - ${job.salary_currency}${job.salary_max}`
-                            : ""}
-                        </span>
+                        {job.location && (
+                          <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
+                            {job.location}
+                          </span>
+                        )}
+                        {job.salary && (
+                          <span className="px-2 py-0.5 bg-gray-100 rounded-full text-sm">
+                            {job.salary}
+                          </span>
+                        )}
                       </div>
                     </div>
                     {job.stage && STAGE_ICONS[job.stage]}
@@ -357,7 +347,9 @@ export default function MyJobsPage() {
                           />
                         ) : (
                           /* Plain‑text fallback */
-                          <p className="whitespace-pre-wrap">{job.description}</p>
+                          <p className="whitespace-pre-wrap">
+                            {job.description}
+                          </p>
                         )}
                       </motion.div>
                     )}
