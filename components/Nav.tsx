@@ -94,7 +94,7 @@ export default function Nav() {
               } relative`}
             >
               {label}
-              {badge > 0 && (
+              {badge && badge > 0 && (
                 <span className="absolute -top-1 -right-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold text-white bg-red-600 rounded-full">
                   {badge}
                 </span>
