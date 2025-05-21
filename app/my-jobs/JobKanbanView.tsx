@@ -19,17 +19,10 @@ import {
   Hourglass,
   DollarSign,
 } from 'lucide-react';
-
-interface Job {
-  job_id: string;
-  title: string;
-  company_name: string;
-  stage: string | null;
-}
-
+import type { Job, JobStage } from "@/types/my-jobs";
 interface Props {
   jobs: Job[];
-  onStageChange?: (jobId: string, newStage: string) => void;
+  onStageChange?: (jobId: string, newStage: JobStage) => Promise<boolean>;
 }
 
 const STAGE_ICONS: Record<string, JSX.Element> = {
@@ -41,7 +34,14 @@ const STAGE_ICONS: Record<string, JSX.Element> = {
   rejected: <Ban className="h-4 w-4 text-red-500" />,
 };
 
-const STAGES = ['none', 'applied', 'interviewing', 'offer', 'hired', 'rejected'];
+const STAGES: JobStage[] = [
+  "none",
+  "applied",
+  "interviewing",
+  "offer",
+  "hired",
+  "rejected",
+];
 
 export default function JobKanbanView({ jobs, onStageChange }: Props) {
   const sensors = useSensors(useSensor(PointerSensor));
@@ -63,7 +63,7 @@ export default function JobKanbanView({ jobs, onStageChange }: Props) {
     if (!active?.id || !over?.id) return;
 
     const jobId = String(active.id);
-    const newStage = String(over.id);
+    const newStage = over.id as JobStage;
     const job = jobs.find((j) => j.job_id === jobId);
     if (!job || (job.stage || 'none') === newStage) return;
 
