@@ -33,7 +33,6 @@ interface Job {
   title: string;
   company_name: string;
   location: string;
-  job: string;
   salary: string;
   application_url: string;
   description: string;
