@@ -1,0 +1,97 @@
+---
+title: "Behind the Magic: The Tech Stack Powering MaryJobins"
+date: 2025-05-21
+description: Learn about the cutting-edge technology behind MaryJobins' personalized job search platform, and discover why our innovative tech stack is attracting top engineering talent. We've built MaryJobins from the ground up to deliver a seamless and efficient job search experience, and we're excited to share the technological marvels that make it all possible.
+tags: [Next.js, Node.js, Express.js, Supabase, Stripe, Ollama, AI, React, Serverless, Database]
+ogImage: /img/02-behind-the-magic-the-tech-stack-powering-maryjobins-preview.png
+cta:
+  text: "Join the Adventure →"
+  url: /signup
+---
+
+# Behind the Magic: The Tech Stack Powering MaryJobins
+
+<nav className="mb-8 border-b pb-4">
+  <h2 className="text-lg font-semibold">Table of Contents</h2>
+  <ul className="list-disc list-inside text-blue-600 space-y-1">
+    <li><a href="#frontend-architecture">Frontend Architecture: A Next.js Delight</a></li>
+    <li><a href="#backend-architecture">Backend Architecture: Node.js and Express.js – A Scalable Foundation</a></li>
+    <li><a href="#database-and-authentication">Database and Authentication: Supabase – Security and Simplicity Combined</a></li>
+    <li><a href="#payment-processing">Payment Processing: Stripe Subscriptions – A Seamless Transaction</a></li>
+    <li><a href="#ai-personalization">AI Personalization: Ollama API – The Heart of MaryJobins</a></li>
+    <li><a href="#the-data-pipeline">The Data Pipeline:  Curating Your Perfect Job List</a></li>
+    <li><a href="#conclusion">Conclusion: A Harmonious Blend of Technology</a></li>
+    <li><a href="#ready-to-join-the-adventure">Ready to Join the Adventure?</a></li>
+  </ul>
+</nav>
+
+## <span id="frontend-architecture">Frontend Architecture: A Next.js Delight</span>
+
+Our frontend utilizes Next.js, a React framework celebrated for its performance and user experience.  Next.js enables us to deliver a lightning-fast, responsive interface, ensuring a smooth and efficient job search even when handling extensive datasets. Features like server-side rendering (SSR) contribute to excellent SEO and a delightful user experience. Job descriptions load swiftly, eliminating frustrating delays and providing users with a polished, efficient experience.
+
+## <span id="backend-architecture">Backend Architecture: Node.js and Express.js – A Scalable Foundation</span>
+
+Powering our backend is the robust combination of Node.js and Express.js. Node.js offers a scalable and efficient runtime environment, enabling us to manage numerous concurrent users and requests without compromising performance.  Express.js, a streamlined and adaptable Node.js web application framework, facilitates rapid development and simple API maintenance.  This ensures our services remain consistently available and responsive to user needs. For example, the API powering your personalized job recommendations is built upon this highly scalable framework, guaranteeing a snappy and reliable response to your search queries.
+
+## <span id="database-and-authentication">Database and Authentication: Supabase – Security and Simplicity Combined</span>
+
+We rely on Supabase, a robust open-source database platform, for secure user authentication and data management. Supabase seamlessly blends the ease of use of a hosted database solution with advanced features for authentication, authorization, and real-time data updates.  This results in a smooth signup and login process, coupled with strong security measures to safeguard your personal information. The streamlined authentication system guarantees quick and secure access to your personalized job feed.
+
+
+## <span id="payment-processing">Payment Processing: Stripe Subscriptions – A Seamless Transaction</span>
+
+MaryJobins employs Stripe Subscriptions for handling premium features and subscriptions. Stripe's secure and reliable payment processing infrastructure ensures a smooth and dependable payment experience.  We selected Stripe for its reputation for reliability, security, and effortless integration with our existing system. Subscribers can confidently manage their subscriptions and enjoy the benefits of our premium features with peace of mind.
+
+
+## <span id="ai-personalization">AI Personalization: Ollama API – The Heart of MaryJobins</span>
+
+The core of MaryJobins is its AI-powered personalization engine, driven by the Ollama API.  This allows us to analyze your skills, experience, preferences, and job search history to provide highly tailored job recommendations that perfectly match your unique profile.
+
+Here's a simplified representation of how it works:
+
+```
+                                     +-----------------+
+                                     |   Ollama API    |
+                                     +--------+--------+
+                                             |
+                                             |  Data Flow
+                                             V
++-----------------+     +-----------------+     +-----------------+
+|  User Profile   |---->|  Skill Analysis  |---->| Recommendation Engine |
++--------+--------+     +--------+--------+     +--------+--------+
+              ^                                             |
+              |                                             V
+              +--------------------------------------------+-----------------+
+                                                            | Personalized Job Feed |
+                                                            +-----------------+
+
+```
+
+The Ollama API processes your data, identifying key skills and preferences.  Our recommendation engine then uses this information, along with current job postings, to generate a highly personalized job feed. This sophisticated algorithm continually learns and adapts, consistently refining its recommendations to enhance your job search effectiveness. For instance, if you frequently search for data analysis roles, Ollama will prioritize those types of job listings within your feed.
+
+## <span id="the-data-pipeline">The Data Pipeline:  Curating Your Perfect Job List</span>
+
+Our data pipeline is a sophisticated system that gathers job postings from various sources, including major job boards and company career websites.  This data then undergoes a thorough cleaning and processing stage before being integrated into our database:
+
+* **Data Acquisition:** Gathering job listings from diverse sources.
+* **Data Cleaning:** Handling inconsistencies, removing duplicates, and correcting errors.
+* **Data Validation:** Ensuring data accuracy and completeness.
+* **Data Transformation:** Structuring data for optimal use by our algorithms.
+* **Data Loading:**  Integrating the processed data into the Supabase database.
+
+This rigorous process ensures that the information presented is accurate, up-to-date, and highly relevant to your job search.
+
+## <span id="conclusion">Conclusion: A Harmonious Blend of Technology</span>
+
+MaryJobins' success is a testament to the power of a carefully selected and integrated tech stack. By combining leading technologies, we've created a personalized job search experience that's both efficient and enjoyable. From the speed of Next.js to the intelligent insights of Ollama, every component works in perfect harmony to help you find your dream job.  This focus on both user experience and cutting-edge technology positions MaryJobins as a leader in the AI-powered job search space.  We’re committed to continually improving and expanding our platform.
+
+## <span id="ready-to-join-the-adventure">Ready to Join the Adventure?</span>
+
+Contribute to our open-source project on GitHub and help us build the future of job searching! [link to GitHub]  Or, perhaps you'd like to join our amazing engineering team and help us revolutionize the job search experience! [link to careers page]
+
+<a
+  href="/signup"
+  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md shadow hover:bg-blue-700 transition mt-6"
+>
+  Join the Adventure →
+</a>
