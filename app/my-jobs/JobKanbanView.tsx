@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+"use client";
+
+import React, { useState } from "react";
 import {
   DndContext,
   closestCorners,
@@ -7,67 +9,70 @@ import {
   useSensors,
   DragEndEvent,
   DragOverEvent,
-} from '@dnd-kit/core';
-import DroppableColumn from './kanban/DroppableColumn';
-import DraggableCard from './kanban/DraggableCard';
-import { motion } from 'framer-motion';
+} from "@dnd-kit/core";
+import DroppableColumn from "./kanban/DroppableColumn";
+import DraggableCard from "./kanban/DraggableCard";
+import { motion } from "framer-motion";
+import type { Job, JobStatus, JobStage } from "@/types/my-jobs";
 import {
-  CheckCircle,
-  FileText,
-  UserCheck,
-  Ban,
-  Hourglass,
-  DollarSign,
-} from 'lucide-react';
+  STAGE_COLORS,
+  KANBAN_STATUSES,
+  KANBAN_LABELS,
+  KANBAN_ICONS,
+  KANBAN_STAGES,
+  KANBAN_STAGE_LABELS,
+  KANBAN_STAGE_ICONS,
+} from "./constants";
 
-interface Job {
-  job_id: string;
-  title: string;
-  company_name: string;
-  stage: string | null;
-}
+export type KanbanViewMode = "status" | "stage";
 
 interface Props {
   jobs: Job[];
-  onStageChange?: (jobId: string, newStage: string) => void;
+  mode: KanbanViewMode;
+  onStatusChange: (jobId: string, status: JobStatus) => Promise<boolean>;
+  onStageChange?: (jobId: string, stage: JobStage) => Promise<boolean>;
+  onArchive?: (jobId: string) => Promise<boolean>;
+  onSave?: (jobId: string) => Promise<boolean>;
 }
 
-const STAGE_ICONS: Record<string, JSX.Element> = {
-  none: <Hourglass className="h-4 w-4 text-gray-500" />,
-  applied: <FileText className="h-4 w-4 text-blue-500" />,
-  interviewing: <UserCheck className="h-4 w-4 text-yellow-500" />,
-  offer: <DollarSign className="h-4 w-4 text-green-500" />,
-  hired: <CheckCircle className="h-4 w-4 text-emerald-600" />,
-  rejected: <Ban className="h-4 w-4 text-red-500" />,
-};
-
-const STAGES = ['none', 'applied', 'interviewing', 'offer', 'hired', 'rejected'];
-
-export default function JobKanbanView({ jobs, onStageChange }: Props) {
+export default function JobKanbanView({
+  jobs,
+  mode,
+  onStatusChange,
+  onStageChange,
+  onArchive,
+  onSave,
+}: Props) {
   const sensors = useSensors(useSensor(PointerSensor));
-  // track which column is currently being hovered
   const [overId, setOverId] = useState<string | null>(null);
 
-  const jobsByStage = STAGES.reduce<Record<string, Job[]>>((acc, stage) => {
-    acc[stage] = jobs.filter((job) => (job.stage || 'none') === stage);
+  // Choose lanes, labels, and icons based on mode
+  const lanes = mode === "status" ? KANBAN_STATUSES : KANBAN_STAGES;
+  const labels = mode === "status" ? KANBAN_LABELS : KANBAN_STAGE_LABELS;
+  const icons = mode === "status" ? KANBAN_ICONS : KANBAN_STAGE_ICONS;
+  const groupKey = mode === "status" ? "status" : "stage";
+
+  // Group jobs by selected key
+  const jobsByLane = lanes.reduce<Record<string, Job[]>>((acc, lane) => {
+    acc[lane] = jobs.filter((job) => (job as any)[groupKey] === lane);
     return acc;
-  }, {});
+  }, {} as Record<string, Job[]>);
 
-  const handleDragOver = (event: DragOverEvent) => {
-    setOverId(event.over?.id ? String(event.over.id) : null);
-  };
+  const handleDragOver = (e: DragOverEvent) =>
+    setOverId(e.over?.id ? String(e.over.id) : null);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (e: DragEndEvent) => {
     setOverId(null);
-    const { active, over } = event;
-    if (!active?.id || !over?.id) return;
-
+    const { active, over } = e;
+    if (!active.id || !over?.id) return;
     const jobId = String(active.id);
-    const newStage = String(over.id);
-    const job = jobs.find((j) => j.job_id === jobId);
-    if (!job || (job.stage || 'none') === newStage) return;
+    const newLane = over.id as string;
 
-    onStageChange?.(jobId, newStage);
+    if (mode === "status") {
+      onStatusChange(jobId, newLane as JobStatus);
+    } else if (onStageChange) {
+      onStageChange(jobId, newLane as JobStage);
+    }
   };
 
   return (
@@ -78,25 +83,29 @@ export default function JobKanbanView({ jobs, onStageChange }: Props) {
       onDragEnd={handleDragEnd}
     >
       <div className="overflow-x-auto">
-        <div className="flex gap-4 w-[1200px] py-6">
-          {STAGES.map((stage) => (
+        <div className="grid grid-flow-col auto-cols-[16rem] gap-4 py-6">
+          {lanes.map((lane) => (
             <motion.div
-              key={stage}
+              key={lane}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * STAGES.indexOf(stage) }}
-              className="flex-shrink-0 w-64"
+              transition={{ delay: 0.05 * lanes.indexOf(lane) }}
+              className="flex flex-col h-full"
             >
               <DroppableColumn
-                id={stage}
-                title={stage}
-                icon={STAGE_ICONS[stage]}
+                id={lane}
+                title={labels[lane]}
+                icon={icons[lane]}
               >
-                {jobsByStage[stage].map((job) => (
+                {jobsByLane[lane]?.map((job) => (
                   <DraggableCard
                     key={job.job_id}
                     id={job.job_id}
                     job={job}
+                    onSave={onSave ? () => onSave(job.job_id) : undefined}
+                    onArchive={
+                      onArchive ? () => onArchive(job.job_id) : undefined
+                    }
                   />
                 ))}
               </DroppableColumn>
