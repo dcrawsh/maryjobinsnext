@@ -307,7 +307,6 @@ export default function JobSearchQuiz() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow space-y-6">
-        
         {renderSteps()}
         <motion.div
           key={current.id}
