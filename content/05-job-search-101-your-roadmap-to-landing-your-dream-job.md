@@ -1,6 +1,6 @@
 ---
 title: "Final Article: Job Search 101: Your Roadmap to Landing Your Dream Job"
-description: "Ready to take control of your job search and land your dream role? Finding the perfect job can feel like a challenge, but with the right strategy and a bit..."
+description: "Ready to take control of your job search and land your dream role? Finding the perfect job can feel like a challenge, but with the right strategy and a bit of organization, your job hunt can be a wonderfully rewarding experience."
 date: 2025-05-22
 tags: [final, article, search, workshops, roles]
 ogImage: /img/final-article-job-search-101-your-roadmap-to-landing-your-dream-job.png
@@ -8,85 +8,118 @@ ogImage: /img/final-article-job-search-101-your-roadmap-to-landing-your-dream-jo
 
 <section class="prose prose-lg mx-auto py-12 px-6">
 
-Ready to take control of your job search and land your dream role? Finding the perfect job can feel like a challenge, but with the right strategy and a bit of organization, your job hunt can be a wonderfully rewarding experience. This comprehensive guide will equip you with the tools and techniques you need to confidently navigate your job search, and MaryJobins is here to help you every step of the way.
+  <h1 class="text-4xl font-bold mb-8">
+    Job Search 101: Your Roadmap to Landing Your Dream Job
+  </h1>
 
-## Understanding Your Strengths: Self-Assessment
+  <p class="mb-6">
+    Ready to take control of your job search and land your dream role? Finding the perfect job can feel like a challenge, but with the right strategy and a bit of organization, your job hunt can be a wonderfully rewarding experience. This comprehensive guide will equip you with the tools and techniques you need, and MaryJobins is here to help you every step of the way.
+  </p>
 
-Before embarking on your job search, it's crucial to understand your skills, experience, and career aspirations.  What are you passionate about? What unique talents do you offer? Reflect on your past accomplishments and consider taking a skills assessment to identify your strengths. This self-awareness will make your job search more focused and efficient.  Knowing your strengths allows you to target roles that are a perfect fit for your abilities and interests.
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Understanding Your Strengths: Self-Assessment
+  </h2>
+  <p class="mb-6">
+    Before you begin, it’s crucial to understand your skills, experience, and career aspirations. What are you passionate about? What unique talents do you offer? Reflect on past accomplishments and consider a skills assessment to pinpoint your strengths. This self-awareness lets you target roles that perfectly fit your abilities and interests.
+  </p>
 
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Crafting a Winning Resume & Cover Letter
+  </h2>
+  <p class="mb-6">
+    Your resume and cover letter are your first impressions—make them count! Highlight accomplishments with strong action verbs and quantifiable results. Tailor each cover letter to the specific role, showcasing enthusiasm and fit. MaryJobins’ resume upload feature helps you manage and customize your materials effortlessly.
+  </p>
+  <ul class="list-disc list-inside mb-6">
+    <li>Use action verbs like “managed,” “developed,” and “implemented.”</li>
+    <li>Quantify achievements (e.g., “increased sales 15% in six months”).</li>
+    <li>Customize for each role, focusing on relevant skills and experience.</li>
+    <li>Keep it concise—aim for one page if you have &lt;10 years of experience.</li>
+  </ul>
 
-## Crafting a Winning Resume and Cover Letter
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Networking: Building Your Professional Network
+  </h2>
+  <p class="mb-6">
+    Networking opens doors to unadvertised opportunities and insights. Build genuine connections by:
+  </p>
+  <ul class="list-disc list-inside mb-6">
+    <li><strong>Informational Interviews:</strong> Speak with professionals to learn and uncover leads.</li>
+    <li><strong>Online Engagement:</strong> Share content, join LinkedIn groups, and comment thoughtfully.</li>
+    <li><strong>Industry Events:</strong> Attend conferences, workshops, and meetups.</li>
+    <li><strong>Existing Contacts:</strong> Ask friends, family, and former colleagues for introductions.</li>
+  </ul>
 
-Your resume and cover letter are your first impressions – make them count! A well-crafted resume highlights your accomplishments and skills using strong action verbs and quantifiable results. Your cover letter should tailor your experience to each specific job, showcasing your enthusiasm and qualifications. MaryJobins offers a resume upload feature to help you easily manage and organize your application materials.
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Job Searching Techniques: Finding Your Perfect Match
+  </h2>
+  <p class="mb-6">
+    MaryJobins delivers personalized job recommendations—saving you time and effort. Beyond our platform, explore niche job boards and company sites. Maximize results by:
+  </p>
+  <ul class="list-disc list-inside mb-6">
+    <li>Using targeted keywords in your searches.</li>
+    <li>Focusing on roles aligned with your goals.</li>
+    <li>Customizing each application to the job description.</li>
+    <li>Exploring multiple platforms to cast a wide net.</li>
+  </ul>
 
-**Tips for a Stellar Resume:**
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Interview Preparation: Acing the Interview
+  </h2>
+  <p class="mb-6">
+    Thorough preparation shows professionalism and interest. Do your research, practice responses, and prepare thoughtful questions. Use MaryJobins’ tracking board to keep tabs on upcoming interviews.
+  </p>
+  <ul class="list-disc list-inside mb-6">
+    <li>Research company mission, values, and recent news.</li>
+    <li>Practice common questions like “Tell me about yourself.”</li>
+    <li>Prepare questions that demonstrate genuine curiosity.</li>
+    <li>Plan professional attire appropriate for the setting.</li>
+  </ul>
 
-* Use action verbs (e.g., "managed," "developed," "implemented") to describe your accomplishments.
-* Quantify your achievements with numbers and data (e.g., "increased sales by 15%," "managed a team of 5").
-* Tailor your resume to each job application, highlighting the skills and experience most relevant to the specific role.
-* Keep it concise, easy to read, and visually appealing, typically aiming for one page for recent graduates and those with less than 10 years of experience.
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Salary Negotiation: Advocating for Your Worth
+  </h2>
+  <p class="mb-6">
+    Confident negotiation can boost your earning potential. Research market rates, quantify your achievements, and practice your pitch. MaryJobins provides salary insights to help you negotiate with confidence.
+  </p>
+  <ul class="list-disc list-inside mb-6">
+    <li>Use sites like Glassdoor to research salary ranges.</li>
+    <li>Highlight data-driven achievements to justify your ask.</li>
+    <li>Know your minimum acceptable salary before negotiations.</li>
+    <li>Role-play scenarios to build negotiation confidence.</li>
+  </ul>
 
-**Example:** Instead of "Managed social media," try "Increased social media engagement by 25% in six months, resulting in a 10% increase in leads."
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Following Up: Staying in Touch
+  </h2>
+  <p class="mb-6">
+    A timely follow-up email shows initiative and keeps you top of mind. MaryJobins’ reminders ensure you never miss a follow-up.
+  </p>
+  <pre class="bg-gray-100 p-4 rounded mb-6 overflow-x-auto">
+<code>
+Subject: Thank You – [Your Name] – Interview for [Job Title]
 
+Hi [Interviewer Name],
 
-## Networking: Building Your Professional Network
+Thank you for the opportunity to discuss the [Job Title] role. I enjoyed learning about [specific topic] and am excited about the possibility of contributing my [skill/experience].
 
-Networking is essential for career success! Building relationships with professionals in your field can open doors to unadvertised opportunities and provide valuable insights.  
+Looking forward to next steps.
 
-**Effective Networking Strategies:**
+Best regards,
+[Your Name]
+</code>
+  </pre>
 
-* **Informational Interviews:** Reach out to people in your field for informational interviews. This allows you to learn about their career paths, gain valuable advice, and potentially uncover hidden job opportunities.
-* **Online Networking:** Actively engage on LinkedIn and other professional platforms.  Share insightful content, participate in relevant groups, and connect with individuals in your target industry.
-* **Industry Events:** Attend conferences, workshops, and networking events, both online and in-person, to expand your network and learn about new opportunities.
-* **Leverage Your Existing Network:** Don't underestimate the power of your existing connections.  Let your friends, family, former colleagues, and professors know you are looking for a new role.
+  <h2 class="text-2xl font-semibold mt-12 mb-4">
+    Conclusion: Your Journey to Job Success Begins Now
+  </h2>
+  <p class="mb-6">
+    Landing your dream job is a journey, not a race. Follow these steps and use MaryJobins’ powerful features—personalized recommendations, resume upload, tracking board, and reminders—to navigate your search with confidence.
+  </p>
 
-
-## Job Searching Techniques: Finding Your Perfect Match
-
-MaryJobins provides personalized job recommendations tailored to your skills and experience, saving you valuable time and effort. Beyond MaryJobins, explore various job boards, company websites, and professional networking platforms.  
-
-**Tips for Effective Job Searching:**
-
-* **Use relevant keywords:** Research industry-specific keywords and incorporate them into your resume, cover letter, and job search queries.
-* **Target your search:** Focus your efforts on companies and roles that align with your skills, interests, and career goals.
-* **Tailor your applications:** Customize your resume and cover letter for each job application, highlighting the skills and experience most relevant to the specific role.
-* **Cast a wide net:** Explore various job search platforms and resources to maximize your chances of finding suitable opportunities.
-
-
-## Interview Preparation: Acing the Interview
-
-Preparation is key to a successful interview. Thorough preparation demonstrates your interest and professionalism.
-
-**Tips for a Successful Interview:**
-
-* **Research the company and role:** Understand the company's mission, values, and recent activities. Research the specific role and its responsibilities.
-* **Practice your responses:** Anticipate common interview questions (e.g., "Tell me about yourself," "Why are you interested in this role?") and practice your responses.
-* **Prepare thoughtful questions:** Asking insightful questions shows your genuine interest and engagement.
-* **Plan your attire:** Dress professionally and appropriately for the interview setting.
-* **MaryJobins' job tracking board** will help you keep track of your applications and upcoming interviews.
-
-
-## Salary Negotiation: Advocating for Your Worth
-
-Negotiating salary and benefits is a crucial aspect of the job search process.  Knowing your worth and confidently communicating your expectations can significantly impact your earning potential.
-
-**Tips for Successful Salary Negotiation:**
-
-* **Research salary ranges:** Use online resources (e.g., Glassdoor, Salary.com) to research typical salary ranges for similar roles in your location.
-* **Quantify your accomplishments:** Highlight your achievements and contributions using data and metrics to demonstrate your value to the employer.
-* **Know your worth:** Determine your minimum acceptable salary and be prepared to justify your compensation expectations.
-* **Practice your negotiation skills:** Role-play with a friend or mentor to prepare for potential salary negotiation scenarios.
-
-
-## Following Up: Staying in Touch
-
-Following up after an interview shows your continued interest and professionalism.  Send a thank-you note reiterating your enthusiasm and highlighting key points from your conversation.  MaryJobins' email notifications will help remind you to follow up efficiently and effectively.
-
-
-## Conclusion: Your Journey to Job Success Begins Now
-
-Finding your dream job is a journey, not a race. By following these steps and utilizing MaryJobins' powerful features, you can confidently navigate the job search process and find a role that's a perfect fit.  MaryJobins streamlines your job search with personalized job recommendations, a resume upload feature, a job tracking board, and email notifications.
-
-**Ready to start your job search with confidence? Sign up for MaryJobins today and receive personalized job recommendations tailored to your skills and experience! [Simulated Button: Sign Up Now!]**
+  <p class="mb-6">
+    <button class="bg-primary-600 text-white px-6 py-3 rounded-md shadow hover:bg-primary-700 transition">
+      Sign Up for Free
+    </button>
+  </p>
 
 </section>
