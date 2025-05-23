@@ -79,7 +79,7 @@ export default function Nav() {
   ];
 
   return (
-    <nav className="bg-deep-navy border-b border-charcoal/20">
+    <nav id="mary-jobins-nav" className="bg-deep-navy border-b border-charcoal/20">
       <div className="max-w-5xl mx-auto flex items-center px-6 py-3 space-x-10">
         {items.map(({ label, href, badge }) => {
           const isActive = pathname === href;
