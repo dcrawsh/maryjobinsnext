@@ -1,20 +1,15 @@
-// app/layout.tsx
+// app/content/[slug]/layout.tsx
+
+import styles from './layout.module.css';
 import type { ReactNode } from 'react';
 
-export const metadata = {
-  title: 'Your Site Title',
-  description: 'Your site description',
-};
+export const metadata = { /* … any route metadata … */ };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function SlugLayout({ children }: { children: ReactNode }) {
+  // Include your normal prose classes plus our module wrapper
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className="min-h-screen bg-white font-sans text-gray-800 antialiased">
-        {/* root container — pages supply their own <main>/<article> */}
-        <div className="mx-auto px-4 py-12 max-w-3xl">
-          {children}
-        </div>
-      </body>
-    </html>
+    <section className={`prose prose-lg mx-auto py-12 px-6 ${styles.wrapper}`}>
+      {children}
+    </section>
   );
 }

@@ -6,7 +6,7 @@ tags: [final, article, unlocking, beyond, include]
 ogImage: /img/final-article-unlocking-potential-how-maryjobins-parses-your-resume-for-perfect-matches.png
 ---
 
-<section class="mx-auto py-12 px-6">
+<section class="prose prose-lg mx-auto py-12 px-6">
 
   <h1 class="text-4xl font-bold mb-8">
     Unlocking Potential: How MaryJobins Parses Your Resume for Perfect Matches

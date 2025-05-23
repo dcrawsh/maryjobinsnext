@@ -16,8 +16,8 @@ const mdx = withMDX({
 export default mdx({
   // env vars for Supabase
   env: {
-    NEXT_PUBLIC_SUPABASE_URL:       process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY:  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SUPABASE_URL:      process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
 
   eslint:  { ignoreDuringBuilds: true },
@@ -27,15 +27,21 @@ export default mdx({
   pageExtensions: ['ts', 'tsx', 'mdx'],
 
   // custom webpack tweaks
-  webpack(config, { isServer }) {
+  webpack(config, { isServer, dev }) {
+    // disable filesystem caching in development
+    if (dev) {
+      config.cache = { type: 'memory' };
+    }
+
     if (!isServer) {
-      // prevent webpack from trying to polyfill these native deps
+      // prevent webpack from polyfilling these native deps
       config.resolve.fallback = {
         ...config.resolve.fallback,
         bufferutil: false,
         'utf-8-validate': false,
       };
     }
+
     return config;
   },
 });
