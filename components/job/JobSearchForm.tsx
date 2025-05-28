@@ -66,6 +66,9 @@ export default function JobSearchForm({ initialValues }: Props) {
   );
   const [tmpAlt, setTmpAlt] = useState('');
   const [tmpSkill, setTmpSkill] = useState('');
+  const [altOptions, setAltOptions] = useState<string[]>([]); // suggestions for Select
+  const [skillOptions, setSkillOptions] = useState<string[]>([]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -81,9 +84,9 @@ export default function JobSearchForm({ initialValues }: Props) {
     },
   });
 
-   /* 👇 add the watchers right here 👇 */
-   const watchAlt  = form.watch('alternate_titles', []);
-   const watchTech = form.watch('tech_skills',     []);
+  /* 👇 add the watchers right here 👇 */
+  const watchAlt = form.watch('alternate_titles', []);
+  const watchTech = form.watch('tech_skills', []);
 
   useEffect(() => {
     if (initialValues) {
@@ -97,6 +100,10 @@ export default function JobSearchForm({ initialValues }: Props) {
       setTechSkills(initialValues.tech_skills ?? []);
     }
   }, [initialValues]);
+
+  useEffect(() => {
+    if (initialValues?.job_title) loadSuggestions(initialValues.job_title);
+  }, [initialValues?.job_title]);
 
 
 
@@ -153,21 +160,30 @@ export default function JobSearchForm({ initialValues }: Props) {
     },
   });
 
-  // ① Fetch alternate titles from our new Next route
-  const fetchAlternates = async (title: string) => {
+  const loadSuggestions = async (title: string) => {
     if (title.trim().length < 2) {
-      setAlternateTitles([]);
+      setAltOptions([]);
+      setSkillOptions([]);
       return;
     }
+
+    // alternate titles
     try {
-      const res = await fetch(
-        `/api/alternate-titles?title=${encodeURIComponent(title)}`
-      );
-      const body = await res.json();
-      setAlternateTitles(body.titles ?? []);
-      form.setValue('alternate_titles', []);
+      const r = await fetch(`/api/alternate-titles?query=${encodeURIComponent(title)}`);
+      const b = await r.json();
+      setAltOptions(b.titles ?? []);
     } catch {
-      setAlternateTitles([]);
+      setAltOptions([]);
+    }
+
+    // tech skills
+    try {
+      const qs = new URLSearchParams({ title, codes: (watchAlt ?? []).join(',') });
+      const r = await fetch(`/api/tech-skills?${qs.toString()}`);
+      const b = await r.json();
+      setSkillOptions(b.tools?.map((t: any) => t.name) ?? []);
+    } catch {
+      setSkillOptions([]);
     }
   };
 
@@ -241,7 +257,7 @@ export default function JobSearchForm({ initialValues }: Props) {
                   {...field}
                   onBlur={(e) => {
                     field.onBlur();
-                    fetchAlternates(e.target.value);
+                    loadSuggestions(e.target.value);   // ← call new helper
                   }}
                 />
               </FormControl>
@@ -250,37 +266,40 @@ export default function JobSearchForm({ initialValues }: Props) {
           )}
         />
 
-     {/* ───────── Alternate Titles ───────── */}
+        {/* ───────── Alternate Titles ───────── */}
 <FormItem>
   <FormLabel>Alternate Titles</FormLabel>
 
-  {/* existing check‑boxes */}
-  {alternateTitles.length > 0 && (
-    <div className="grid grid-cols-2 gap-2 mb-2">
-      {alternateTitles.map((t) => {
-        const checked = (watchAlt ?? []).includes(t); // ← never undefined
-        return (
-          <label key={t} className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4"
-              checked={checked}
-              onChange={(e) => {
-                const next = e.target.checked
-                  ? [...(watchAlt ?? []), t]
-                  : (watchAlt ?? []).filter((x) => x !== t);
-                form.setValue('alternate_titles', next, { shouldDirty: true });
-              }}
-            />
-            <span>{t}</span>
-          </label>
-        );
-      })}
+  {/* suggestion dropdown */}
+  {altOptions.length > 0 && (
+    <div className="mb-2">
+      <Select
+        onValueChange={(value) => {
+          if (!watchAlt.includes(value)) {
+            const next = [...watchAlt, value];
+            form.setValue('alternate_titles', next, { shouldDirty: true });
+            setAlternateTitles(next);
+          }
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Choose a suggested title…" />
+        </SelectTrigger>
+        <SelectContent>
+          {altOptions
+            .filter((t) => !watchAlt.includes(t))
+            .map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
     </div>
   )}
 
-  {/* add‑your‑own title */}
-  <div className="flex gap-2">
+  {/* free‑text add */}
+  <div className="flex gap-2 mb-2">
     <Input
       placeholder="Add another title…"
       value={tmpAlt}
@@ -290,50 +309,78 @@ export default function JobSearchForm({ initialValues }: Props) {
       type="button"
       onClick={() => {
         const title = tmpAlt.trim();
-        if (!title || alternateTitles.includes(title)) return;
-        setAlternateTitles((prev) => [...prev, title]);
-        form.setValue('alternate_titles', [...(watchAlt ?? []), title], {
-          shouldDirty: true,
-        });
+        if (!title || watchAlt.includes(title)) return;
+        const next = [...watchAlt, title];
+        form.setValue('alternate_titles', next, { shouldDirty: true });
+        setAlternateTitles(next);
         setTmpAlt('');
       }}
     >
       Add
     </Button>
   </div>
-</FormItem>
 
-{/* ───────── Tech Skills ───────── */}
-<FormItem>
-  <FormLabel>Tech Skills</FormLabel>
-
-  {/* existing check‑boxes */}
-  {techSkills.length > 0 && (
-    <div className="grid grid-cols-2 gap-2 mb-2">
-      {techSkills.map((s) => {
-        const checked = (watchTech ?? []).includes(s); // ← never undefined
+  {/* checkbox list */}
+  {alternateTitles.length > 0 && (
+    <div className="grid grid-cols-2 gap-2">
+      {alternateTitles.map((t) => {
+        const checked = watchAlt.includes(t);
         return (
-          <label key={s} className="flex items-center space-x-2">
+          <label key={t} className="flex items-center space-x-2">
             <input
               type="checkbox"
               className="h-4 w-4"
               checked={checked}
               onChange={(e) => {
                 const next = e.target.checked
-                  ? [...(watchTech ?? []), s]
-                  : (watchTech ?? []).filter((x) => x !== s);
-                form.setValue('tech_skills', next, { shouldDirty: true });
+                  ? [...watchAlt, t]
+                  : watchAlt.filter((x) => x !== t);
+                form.setValue('alternate_titles', next, { shouldDirty: true });
+                setAlternateTitles(next);
               }}
             />
-            <span>{s}</span>
+            <span>{t}</span>
           </label>
         );
       })}
     </div>
   )}
+</FormItem>
 
-  {/* add‑your‑own skill */}
-  <div className="flex gap-2">
+{/* ───────── Tech Skills ───────── */}
+<FormItem>
+  <FormLabel>Tech Skills</FormLabel>
+
+  {/* suggestion dropdown */}
+  {skillOptions.length > 0 && (
+    <div className="mb-2">
+      <Select
+        onValueChange={(value) => {
+          if (!watchTech.includes(value)) {
+            const next = [...watchTech, value];
+            form.setValue('tech_skills', next, { shouldDirty: true });
+            setTechSkills(next);
+          }
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Choose a suggested skill…" />
+        </SelectTrigger>
+        <SelectContent>
+          {skillOptions
+            .filter((s) => !watchTech.includes(s))
+            .map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )}
+
+  {/* free‑text add */}
+  <div className="flex gap-2 mb-2">
     <Input
       placeholder="Add another skill…"
       value={tmpSkill}
@@ -343,17 +390,42 @@ export default function JobSearchForm({ initialValues }: Props) {
       type="button"
       onClick={() => {
         const skill = tmpSkill.trim();
-        if (!skill || techSkills.includes(skill)) return;
-        setTechSkills((prev) => [...prev, skill]);
-        form.setValue('tech_skills', [...(watchTech ?? []), skill], {
-          shouldDirty: true,
-        });
+        if (!skill || watchTech.includes(skill)) return;
+        const next = [...watchTech, skill];
+        form.setValue('tech_skills', next, { shouldDirty: true });
+        setTechSkills(next);
         setTmpSkill('');
       }}
     >
       Add
     </Button>
   </div>
+
+  {/* checkbox list */}
+  {techSkills.length > 0 && (
+    <div className="grid grid-cols-2 gap-2">
+      {techSkills.map((s) => {
+        const checked = watchTech.includes(s);
+        return (
+          <label key={s} className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={checked}
+              onChange={(e) => {
+                const next = e.target.checked
+                  ? [...watchTech, s]
+                  : watchTech.filter((x) => x !== s);
+                form.setValue('tech_skills', next, { shouldDirty: true });
+                setTechSkills(next);
+              }}
+            />
+            <span>{s}</span>
+          </label>
+        );
+      })}
+    </div>
+  )}
 </FormItem>
 
 
@@ -474,8 +546,8 @@ export default function JobSearchForm({ initialValues }: Props) {
               <div
                 {...getRootProps()}
                 className={`border-2 border-dashed p-6 text-center ${isDragActive
-                    ? 'border-blue-500'
-                    : 'border-gray-300'
+                  ? 'border-blue-500'
+                  : 'border-gray-300'
                   } rounded`}
               >
                 <input {...getInputProps()} />
