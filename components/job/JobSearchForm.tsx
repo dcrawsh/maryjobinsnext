@@ -84,9 +84,10 @@ export default function JobSearchForm({ initialValues }: Props) {
     },
   });
 
-  /* 👇 add the watchers right here 👇 */
-  const watchAlt = form.watch('alternate_titles', []);
-  const watchTech = form.watch('tech_skills', []);
+/* watchers: guaranteed string[] */
+const watchAlt:  string[] = (form.watch('alternate_titles') ?? []) as string[];
+const watchTech: string[] = (form.watch('tech_skills')      ?? []) as string[];
+
 
   useEffect(() => {
     if (initialValues) {
