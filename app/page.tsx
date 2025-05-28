@@ -48,16 +48,19 @@ export default function Home() {
       {/* ── Section Two: Mission ────────────────────────────── */}
       <section className="container mx-auto px-4 py-16 grid gap-12 md:grid-cols-2 items-center">
         <div>
-          <h2 className="text-3xl font-bold mb-6">
-            At MaryJobins, we create tools that breathe fresh air into job searching
-          </h2>
-          <p className="text-lg leading-relaxed">
-            We believe job search is broken. Employers are aggregating vast data on workers to make hiring decisions, job aggregators create two sided markets or social media platforms designed to sell to job searchers. That's why we create tools to benefit job searchers. Delight can come least when you expect it, and we hope that our first tool makes just one person's job search a bit brighter.
-          </p>
+        <h2 className="text-3xl font-bold mb-6">
+  At MaryJobins, we<br />
+  create tools that breathe<br />
+  fresh air into job searching
+</h2>
         </div>
-        <div className="bg-primary/10 rounded-lg p-8 text-center">
-          <h3 className="text-xl font-semibold mb-2">Built for Workers</h3>
-          <p className="text-muted-foreground">Tools designed to empower you, not exploit you</p>
+        <div className="rounded-lg text-">
+          <p className="text-left">We believe job search is broken. Employers are aggregating vast data on workers to make hiring decisions, job aggregators create two sided markets or social media platforms designed to sell to job searchers.
+          </p>
+          <br/>
+          <p className="text-left">
+          That’s why we create tools to benefit job searchers. Delight can come least when you expect it, and we hope that our first tool makes just one person’s job search a bit brighter.
+          </p>
         </div>
       </section>
 
