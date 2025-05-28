@@ -42,7 +42,7 @@ const STEP_ICONS: Record<string, JSX.Element> = {
 };
 
 export default function JobSearchQuiz() {
-  const { session } = useSession({ isProtectedRoute: false });
+  const { session } = useSession({ isProtectedRoute: true });
   const [step, setStep] = useState<number>(0);
   const [options, setOptions] = useState<{ code: string; name: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
