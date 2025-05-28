@@ -45,6 +45,7 @@ export async function POST(req: Request) {
 
     const domains = [
       "https://maryjobbins.com/process-searches",
+      "https://maryjobinsexpress-1.onrender.com/process-searches",
       "https://maryjobinsexpress-2.onrender.com/process-searches",
       "https://maryjobinsexpress-3.onrender.com/process-searches",
     ];
