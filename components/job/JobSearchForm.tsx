@@ -4,6 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useDropzone } from 'react-dropzone';
 import * as z from 'zod';
+import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import { useSession } from '@/hooks/useSession';
+import { createClient } from '@supabase/supabase-js';
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -15,7 +20,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
 import {
   Select,
   SelectContent,
@@ -23,9 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { useState } from 'react';
-import { useSession } from '@/hooks/useSession';
 
 /* ────────── schema ────────── */
 const schema = z.object({
@@ -34,19 +35,39 @@ const schema = z.object({
   location: z.string().min(2),
   skill_level: z.string(),
   remote_preference: z.string(),
-  resume_data: z
-    .string()
-    .min(10, 'Please paste at least 10 characters of your resume'),
+  resume_data: z.string().min(10, 'Please paste at least 10 characters of your resume'),
   alternate_titles: z.array(z.string()).optional(),
+  tech_skills: z.array(z.string()).optional(),
 });
-type FormValues = z.infer<typeof schema>;
+export type FormValues = z.infer<typeof schema>;
 
-export default function JobSearchForm() {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // browser key
+);
+
+interface Props {
+  /** values from parent – may be null on first paint */
+  initialValues: Partial<FormValues> | null;
+}
+
+export default function JobSearchForm({ initialValues }: Props) {
   const { session } = useSession({ isProtectedRoute: false });
+
+  /* ------- local state ------- */
   const [saving, setSaving] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
-  const [alternateTitles, setAlternateTitles] = useState<string[]>([]);
+  const [alternateTitles, setAlternateTitles] = useState<string[]>(
+    initialValues?.alternate_titles ?? []
+  );
+  const [techSkills, setTechSkills] = useState<string[]>(
+    initialValues?.tech_skills ?? []
+  );
+  const [tmpAlt, setTmpAlt] = useState('');
+  const [tmpSkill, setTmpSkill] = useState('');
+  const [altOptions, setAltOptions] = useState<string[]>([]); // suggestions for Select
+  const [skillOptions, setSkillOptions] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -58,8 +79,35 @@ export default function JobSearchForm() {
       remote_preference: '',
       resume_data: '',
       alternate_titles: [],
+      tech_skills: [],
+      ...(initialValues ?? {}),
     },
   });
+
+/* watchers: guaranteed string[] */
+const watchAlt:  string[] = (form.watch('alternate_titles') ?? []) as string[];
+const watchTech: string[] = (form.watch('tech_skills')      ?? []) as string[];
+
+
+  useEffect(() => {
+    if (initialValues) {
+      form.reset({
+        ...form.getValues(),
+        ...initialValues,
+        alternate_titles: initialValues.alternate_titles ?? [],
+        tech_skills: initialValues.tech_skills ?? [],
+      });
+      setAlternateTitles(initialValues.alternate_titles ?? []);
+      setTechSkills(initialValues.tech_skills ?? []);
+    }
+  }, [initialValues]);
+
+  useEffect(() => {
+    if (initialValues?.job_title) loadSuggestions(initialValues.job_title);
+  }, [initialValues?.job_title]);
+
+
+
 
   // Dropzone config
   const onDrop = async (files: File[]) => {
@@ -113,21 +161,30 @@ export default function JobSearchForm() {
     },
   });
 
-  // ① Fetch alternate titles from our new Next route
-  const fetchAlternates = async (title: string) => {
+  const loadSuggestions = async (title: string) => {
     if (title.trim().length < 2) {
-      setAlternateTitles([]);
+      setAltOptions([]);
+      setSkillOptions([]);
       return;
     }
+
+    // alternate titles
     try {
-      const res = await fetch(
-        `/api/alternate-titles?title=${encodeURIComponent(title)}`
-      );
-      const body = await res.json();
-      setAlternateTitles(body.titles ?? []);
-      form.setValue('alternate_titles', []);
+      const r = await fetch(`/api/alternate-titles?query=${encodeURIComponent(title)}`);
+      const b = await r.json();
+      setAltOptions(b.titles ?? []);
     } catch {
-      setAlternateTitles([]);
+      setAltOptions([]);
+    }
+
+    // tech skills
+    try {
+      const qs = new URLSearchParams({ title, codes: (watchAlt ?? []).join(',') });
+      const r = await fetch(`/api/tech-skills?${qs.toString()}`);
+      const b = await r.json();
+      setSkillOptions(b.tools?.map((t: any) => t.name) ?? []);
+    } catch {
+      setSkillOptions([]);
     }
   };
 
@@ -146,6 +203,7 @@ export default function JobSearchForm() {
             job_title: values.job_title,
             alternate_titles: values.alternate_titles,
             years_of_experience: values.years_of_experience,
+            tech_skills: values.tech_skills,
             location: values.location,
             skill_level: values.skill_level,
             remote_preference: values.remote_preference,
@@ -200,7 +258,7 @@ export default function JobSearchForm() {
                   {...field}
                   onBlur={(e) => {
                     field.onBlur();
-                    fetchAlternates(e.target.value);
+                    loadSuggestions(e.target.value);   // ← call new helper
                   }}
                 />
               </FormControl>
@@ -209,39 +267,168 @@ export default function JobSearchForm() {
           )}
         />
 
-        {/* Alternate Titles (O*NET suggestions) */}
-        {alternateTitles.length > 0 && (
-          <FormItem>
-            <FormLabel>Please Select More Bitch - Get That Good Search:</FormLabel>
-            <div className="grid grid-cols-2 gap-2">
-              {alternateTitles.map((t) => {
-                const selected =
-                  form.getValues('alternate_titles') || [];
-                const checked = selected.includes(t);
-                return (
-                  <label
-                    key={t}
-                    className="flex items-center space-x-2"
-                  >
-                    <input
-                      type="checkbox"
-                      value={t}
-                      checked={checked}
-                      onChange={(e) => {
-                        const next = e.target.checked
-                          ? [...selected, t]
-                          : selected.filter((x) => x !== t);
-                        form.setValue('alternate_titles', next);
-                      }}
-                      className="h-4 w-4"
-                    />
-                    <span>{t}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </FormItem>
-        )}
+        {/* ───────── Alternate Titles ───────── */}
+<FormItem>
+  <FormLabel>Alternate Titles</FormLabel>
+
+  {/* suggestion dropdown */}
+  {altOptions.length > 0 && (
+    <div className="mb-2">
+      <Select
+        onValueChange={(value) => {
+          if (!watchAlt.includes(value)) {
+            const next = [...watchAlt, value];
+            form.setValue('alternate_titles', next, { shouldDirty: true });
+            setAlternateTitles(next);
+          }
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Choose a suggested title…" />
+        </SelectTrigger>
+        <SelectContent>
+          {altOptions
+            .filter((t) => !watchAlt.includes(t))
+            .map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )}
+
+  {/* free‑text add */}
+  <div className="flex gap-2 mb-2">
+    <Input
+      placeholder="Add another title…"
+      value={tmpAlt}
+      onChange={(e) => setTmpAlt(e.target.value)}
+    />
+    <Button
+      type="button"
+      onClick={() => {
+        const title = tmpAlt.trim();
+        if (!title || watchAlt.includes(title)) return;
+        const next = [...watchAlt, title];
+        form.setValue('alternate_titles', next, { shouldDirty: true });
+        setAlternateTitles(next);
+        setTmpAlt('');
+      }}
+    >
+      Add
+    </Button>
+  </div>
+
+  {/* checkbox list */}
+  {alternateTitles.length > 0 && (
+    <div className="grid grid-cols-2 gap-2">
+      {alternateTitles.map((t) => {
+        const checked = watchAlt.includes(t);
+        return (
+          <label key={t} className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={checked}
+              onChange={(e) => {
+                const next = e.target.checked
+                  ? [...watchAlt, t]
+                  : watchAlt.filter((x) => x !== t);
+                form.setValue('alternate_titles', next, { shouldDirty: true });
+                setAlternateTitles(next);
+              }}
+            />
+            <span>{t}</span>
+          </label>
+        );
+      })}
+    </div>
+  )}
+</FormItem>
+
+{/* ───────── Tech Skills ───────── */}
+<FormItem>
+  <FormLabel>Tech Skills</FormLabel>
+
+  {/* suggestion dropdown */}
+  {skillOptions.length > 0 && (
+    <div className="mb-2">
+      <Select
+        onValueChange={(value) => {
+          if (!watchTech.includes(value)) {
+            const next = [...watchTech, value];
+            form.setValue('tech_skills', next, { shouldDirty: true });
+            setTechSkills(next);
+          }
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Choose a suggested skill…" />
+        </SelectTrigger>
+        <SelectContent>
+          {skillOptions
+            .filter((s) => !watchTech.includes(s))
+            .map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )}
+
+  {/* free‑text add */}
+  <div className="flex gap-2 mb-2">
+    <Input
+      placeholder="Add another skill…"
+      value={tmpSkill}
+      onChange={(e) => setTmpSkill(e.target.value)}
+    />
+    <Button
+      type="button"
+      onClick={() => {
+        const skill = tmpSkill.trim();
+        if (!skill || watchTech.includes(skill)) return;
+        const next = [...watchTech, skill];
+        form.setValue('tech_skills', next, { shouldDirty: true });
+        setTechSkills(next);
+        setTmpSkill('');
+      }}
+    >
+      Add
+    </Button>
+  </div>
+
+  {/* checkbox list */}
+  {techSkills.length > 0 && (
+    <div className="grid grid-cols-2 gap-2">
+      {techSkills.map((s) => {
+        const checked = watchTech.includes(s);
+        return (
+          <label key={s} className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              checked={checked}
+              onChange={(e) => {
+                const next = e.target.checked
+                  ? [...watchTech, s]
+                  : watchTech.filter((x) => x !== s);
+                form.setValue('tech_skills', next, { shouldDirty: true });
+                setTechSkills(next);
+              }}
+            />
+            <span>{s}</span>
+          </label>
+        );
+      })}
+    </div>
+  )}
+</FormItem>
+
 
         {/* Years of Experience */}
         <FormField
@@ -359,18 +546,17 @@ export default function JobSearchForm() {
               <FormLabel>Resume</FormLabel>
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed p-6 text-center ${
-                  isDragActive
-                    ? 'border-blue-500'
-                    : 'border-gray-300'
-                } rounded`}
+                className={`border-2 border-dashed p-6 text-center ${isDragActive
+                  ? 'border-blue-500'
+                  : 'border-gray-300'
+                  } rounded`}
               >
                 <input {...getInputProps()} />
                 {parsing
                   ? 'Parsing your resume…'
                   : isDragActive
-                  ? 'Drop it here!'
-                  : 'Drag & drop a PDF, DOCX, or TXT resume here, or click to select'}
+                    ? 'Drop it here!'
+                    : 'Drag & drop a PDF, DOCX, or TXT resume here, or click to select'}
               </div>
               {fileError && (
                 <p className="text-red-600 text-sm mt-1">
