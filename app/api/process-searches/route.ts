@@ -43,14 +43,20 @@ export async function POST(req: Request) {
       searches: body.searches,
     };
 
-    const externalRes = await fetch(
+    const domains = [
       "https://maryjobbins.com/process-searches",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+      "https://maryjobinsexpress-2.onrender.com/process-searches",
+      "https://maryjobinsexpress-3.onrender.com/process-searches",
+    ];
+
+    const selectedDomain = domains[Math.floor(Math.random() * domains.length)];
+
+    const externalRes = await fetch(selectedDomain, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
 
     if (!externalRes.ok) {
       console.error("External API failed:", await externalRes.text());
