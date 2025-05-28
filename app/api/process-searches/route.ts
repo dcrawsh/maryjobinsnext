@@ -48,8 +48,10 @@ export async function POST(req: Request) {
       "https://maryjobinsexpress-2.onrender.com/process-searches",
       "https://maryjobinsexpress-3.onrender.com/process-searches",
     ];
-
-    const selectedDomain = domains[Math.floor(Math.random() * domains.length)];
+    
+    // Shuffle the array first
+    const shuffled = domains.sort(() => 0.5 - Math.random());
+    const selectedDomain = shuffled[0];
 
     const externalRes = await fetch(selectedDomain, {
       method: "POST",
