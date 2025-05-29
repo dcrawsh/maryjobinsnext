@@ -55,7 +55,7 @@ export default function Nav() {
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="h-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div className="h-16 mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/img/favicon.png"
@@ -82,7 +82,7 @@ export default function Nav() {
                 }`}
               >
                 {label}
-                {badge && badge > 0 && (
+                {typeof badge === "number"  && badge > 0 && (
                   <span className="absolute -top-2 -right-3 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-600 rounded-full leading-none">
                     {badge}
                   </span>

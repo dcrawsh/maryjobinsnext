@@ -65,7 +65,7 @@ export default function Home() {
       </section>
 
       {/* ── How It Works ─────────────────────────────────────── */}
-      <section id="how-it-works" className="container mx-auto px-4 py-16">
+      <section id="how-it-works" className="container mx-auto px-4 py-16 flex flex-col items-center">
         <h2 className="text-3xl font-bold text-center mb-8">How It Works</h2>
         <ol className="max-w-3xl mx-auto space-y-4 list-decimal pl-6 text-lg">
           <li>Sign up and upload your resume.</li>

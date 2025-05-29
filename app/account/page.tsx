@@ -1,4 +1,3 @@
-/* app/account/page.tsx */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,15 +6,8 @@ import { useSession } from '@/hooks/useSession';
 import { supabase } from '@/lib/supabaseBrowser';
 import { Button } from '@/components/ui/button';
 
-/**
- * Route: /account
- * A refined, sleek MaryJobins dashboard:
- * - Subscription overview
- * - Security actions
- * - Sign Out
- */
 export default function AccountPage() {
-  const { session, signOut } = useSession( { isProtectedRoute: false } );
+  const { session, signOut } = useSession();
   const userId = session?.user?.id;
 
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
@@ -35,14 +27,14 @@ export default function AccountPage() {
   const hasSubscription = subscriptionStatus === 'active';
 
   return (
-    <div className="min-h-screen bg-white font-body text-charcoal">
-      <div className="max-w-3xl mx-auto py-12 px-6">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white px-4 py-12">
+      <div className="w-full max-w-2xl p-6 bg-white rounded-2xl shadow space-y-8">
         {/* Header */}
-        <header className="mb-10">
-          <h1 className="font-gibson text-4xl tracking-tight text-deep-navy">
-            Welcome back,
+        <header className="text-center space-y-1">
+          <h1 className="text-2xl font-semibold text-deep-navy">
+            Welcome back
           </h1>
-          <p className="font-gibson text-2xl tracking-tight mb-2">
+          <p className="text-lg font-medium text-gray-800">
             {session?.user?.email}
           </p>
           <p className="text-sm text-charcoal/70">
@@ -52,53 +44,53 @@ export default function AccountPage() {
 
         {/* Cards */}
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Subscription */}
-            {/* <div className="flex-1 bg-white p-6 rounded-2xl ring-1 ring-border hover:ring-charcoal/20 transition"> */}
-              {/* <h2 className="font-gibson text-xl text-deep-navy mb-1">
-                Subscription
-              </h2>
-              <p className="text-sm mb-4">
-                {subscriptionStatus === null
-                  ? 'Loading status…'
-                  : hasSubscription
-                  ? 'Premium access active'
-                  : 'Free tier – upgrade available'}
-              </p> */}
-              {/* {subscriptionStatus !== null && (
-                hasSubscription ? (
-                  <Link href="https://billing.stripe.com/p/login/test_28o16A2zKd9X1HicMM">
-                    <Button className="w-full bg-deep-navy hover:bg-deep-navy/90 text-cream">
-                      Manage Subscription
-                    </Button>
-                  </Link>
-                ) : (
-                  <Link href="/api/checkout">
-                    <Button className="w-full bg-cherry-red hover:bg-cherry-red/90 text-cream">
-                      Upgrade to Premium
-                    </Button>
-                  </Link>
-                )
-              )} */}
-            {/* </div> */}
+          {/* Subscription (preserved as-is, just visually separated) */}
+          {/* 
+          <div className="bg-white p-6 rounded-xl ring-1 ring-border hover:ring-charcoal/20 transition">
+            <h2 className="font-gibson text-lg text-deep-navy mb-2">
+              Subscription
+            </h2>
+            <p className="text-sm mb-4">
+              {subscriptionStatus === null
+                ? 'Loading status…'
+                : hasSubscription
+                ? 'Premium access active'
+                : 'Free tier – upgrade available'}
+            </p>
+            {subscriptionStatus !== null && (
+              hasSubscription ? (
+                <Link href="https://billing.stripe.com/p/login/test_28o16A2zKd9X1HicMM">
+                  <Button className="w-full bg-deep-navy hover:bg-deep-navy/90 text-cream">
+                    Manage Subscription
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/api/checkout">
+                  <Button className="w-full bg-cherry-red hover:bg-cherry-red/90 text-cream">
+                    Upgrade to Premium
+                  </Button>
+                </Link>
+              )
+            )}
+          </div> 
+          */}
 
-            {/* Security */}
-            <div className="flex-1 bg-white p-6 rounded-2xl ring-1 ring-border hover:ring-charcoal/20 transition">
-              <h2 className="font-gibson text-xl text-deep-navy mb-1">
-                Security
-              </h2>
-              <p className="text-sm mb-4">
-                Change your password or sign out from this session.
-              </p>
-              <Link href="/update-password">
+          {/* Security Card */}
+          <div className="bg-white p-6 rounded-xl ring-1 ring-border hover:ring-charcoal/20 transition">
+            <h2 className="text-lg font-semibold text-deep-navy mb-2">
+              Security
+            </h2>
+            <p className="text-sm mb-4">
+              Change your password or sign out from this session.
+            </p>
+            <Link href="/update-password">
               <Button className="w-full bg-deep-navy hover:bg-deep-navy/90 text-cream">
-                  Change Password
-                </Button>
-              </Link>
-            </div>
+                Change Password
+              </Button>
+            </Link>
           </div>
 
-          {/* Sign Out */}
+          {/* Sign Out Button */}
           <div>
             <Button
               onClick={signOut}
