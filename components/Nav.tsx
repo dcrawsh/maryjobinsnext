@@ -1,65 +1,96 @@
-/* components/Nav.tsx */
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';       // ← add
-import { usePathname } from 'next/navigation';
-import { useSession } from '@/hooks/useSession';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseBrowser';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useSession } from "@/hooks/useSession";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseBrowser";
+import Image from "next/image";
 
 export default function Nav() {
   const pathname = usePathname();
   const { session } = useSession({ isProtectedRoute: false });
   const [newCount, setNewCount] = useState(0);
 
-  /* …realtime code unchanged… */
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) return;
 
-  const items = [
-    { label: 'Account', href: '/account' },
-    { label: 'Job Search', href: '/my-search' },
-    { label: 'Job Listings', href: '/my-jobs', badge: newCount },
-    { label: 'Quiz', href: '/job-search-quiz' },
+    const fetchCount = async () => {
+      const { count, error } = await supabase
+        .from("user_jobs")
+        .select("job_id", { head: true, count: "exact" })
+        .eq("user_id", userId)
+        .eq("status", "new");
+      if (!error) setNewCount(count ?? 0);
+    };
+
+    fetchCount();
+
+    const channel = supabase
+      .channel(`realtime:user_jobs_${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_jobs",
+          filter: `user_id=eq.${userId}`,
+        },
+        fetchCount
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id]);
+
+  const navItems = [
+    { label: "Account", href: "/account" },
+    { label: "Job Search", href: "/my-search" },
+    { label: "Job Listings", href: "/my-jobs", badge: newCount },
+    { label: "Quiz", href: "/job-search-quiz" },
   ];
 
   return (
-    <nav id="mary-jobins-nav" className="bg-deep-navy border-b border-charcoal/20">
-      <div className="max-w-5xl mx-auto flex items-center px-6 py-3 space-x-10">
-        {/* ── Logo ─────────────────────────────────────────── */}
-        <Link href="/" className="flex items-center">
-          {/* Replace /favicon.ico with /logo.svg or whatever asset you prefer */}
+    <nav className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="h-16 mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+        <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/img/favicon.png"
             alt="MaryJobins"
-            width={32}
-            height={32}
-            priority
-            className="rounded"  // remove if your asset is already square / rounded
+            width={28}
+            height={28}
+            className="rounded"
           />
+          <span className="font-semibold text-lg text-gray-800">
+            MaryJobins
+          </span>
         </Link>
-
-        {/* ── Nav links ───────────────────────────────────── */}
-        {items.map(({ label, href, badge }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`font-gibson text-base transition-all duration-200 text-cream ${
-                isActive
-                  ? 'underline underline-offset-4 decoration-charcoal'
-                  : 'hover:underline hover:decoration-charcoal'
-              } relative`}
-            >
-              {label}
-              {badge && badge > 0 && (
-                <span className="absolute -top-1 -right-3 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold text-white bg-red-600 rounded-full">
-                  {badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+        <div className="flex space-x-6">
+          {navItems.map(({ label, href, badge }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`relative text-sm font-medium ${
+                  isActive
+                    ? "text-gray-900 underline underline-offset-4 decoration-gray-400"
+                    : "text-gray-600 hover:text-gray-900 hover:underline hover:decoration-gray-300"
+                }`}
+              >
+                {label}
+                {typeof badge === "number"  && badge > 0 && (
+                  <span className="absolute -top-2 -right-3 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-red-600 rounded-full leading-none">
+                    {badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

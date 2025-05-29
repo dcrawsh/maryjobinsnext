@@ -6,11 +6,15 @@ export default function AuthPage() {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4">
-        <div className="max-w-md mx-auto pt-8">
+      <div className="h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-b from-background to-secondary px-4">
+        <div className="w-full max-w-md">
           <Card className="shadow-lg">
-            <CardHeader className="text-center"><CardTitle className="text-2xl font-bold">Welcome</CardTitle></CardHeader>
-            <CardContent><AuthTabs /></CardContent>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AuthTabs />
+            </CardContent>
           </Card>
         </div>
       </div>
