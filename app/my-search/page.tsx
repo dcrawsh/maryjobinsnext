@@ -27,11 +27,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4">
       <div className="max-w-2xl mx-auto pt-8 space-y-4">
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={signOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
-          </Button>
-        </div>
+
 
         <Card className="shadow-lg">
           <CardHeader className="text-center space-y-2">

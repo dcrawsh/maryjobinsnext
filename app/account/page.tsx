@@ -54,8 +54,8 @@ export default function AccountPage() {
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Subscription */}
-            <div className="flex-1 bg-white p-6 rounded-2xl ring-1 ring-border hover:ring-charcoal/20 transition">
-              <h2 className="font-gibson text-xl text-deep-navy mb-1">
+            {/* <div className="flex-1 bg-white p-6 rounded-2xl ring-1 ring-border hover:ring-charcoal/20 transition"> */}
+              {/* <h2 className="font-gibson text-xl text-deep-navy mb-1">
                 Subscription
               </h2>
               <p className="text-sm mb-4">
@@ -64,8 +64,8 @@ export default function AccountPage() {
                   : hasSubscription
                   ? 'Premium access active'
                   : 'Free tier – upgrade available'}
-              </p>
-              {subscriptionStatus !== null && (
+              </p> */}
+              {/* {subscriptionStatus !== null && (
                 hasSubscription ? (
                   <Link href="https://billing.stripe.com/p/login/test_28o16A2zKd9X1HicMM">
                     <Button className="w-full bg-deep-navy hover:bg-deep-navy/90 text-cream">
@@ -79,8 +79,8 @@ export default function AccountPage() {
                     </Button>
                   </Link>
                 )
-              )}
-            </div>
+              )} */}
+            {/* </div> */}
 
             {/* Security */}
             <div className="flex-1 bg-white p-6 rounded-2xl ring-1 ring-border hover:ring-charcoal/20 transition">
