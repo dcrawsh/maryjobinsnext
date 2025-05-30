@@ -3,7 +3,6 @@
 
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { motion } from "framer-motion"
 
 interface Props {
   /** Unique identifier for this column (status or stage) */
@@ -29,7 +28,7 @@ export default function DroppableColumn({ id, title, icon, children }: Props) {
         {icon}
         <span className="capitalize text-sm">{title}</span>
       </div>
-      <motion.ul layout className="space-y-2">{children}</motion.ul>
+      <ul className="space-y-2">{children}</ul>
     </div>
   );
 }

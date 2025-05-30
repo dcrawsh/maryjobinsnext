@@ -45,7 +45,7 @@ export default function Page() {
       });
   }, [jobs, searchTerm, filterStage, filterStatus, sortBy]);
 
-  if (loading && jobs.length === 0) return <div className="p-6 space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="animate-pulse bg-gray-200 h-24 rounded-lg" />)}</div>;
+  if (loading) return <div className="p-6 space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="animate-pulse bg-gray-200 h-24 rounded-lg" />)}</div>;
   if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
 
   return (

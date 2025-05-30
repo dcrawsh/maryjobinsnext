@@ -67,43 +67,21 @@ export function useJobs() {
   const updateStatus = useCallback(
     async (jobId: string, status: JobStatus): Promise<boolean> => {
       if (!session) return false;
-      // 1) Optimistically update the local jobs array:
-      setJobs((prev) =>
-        prev.map((j) =>
-          j.job_id === jobId
-            ? { ...j, status }  // move it instantly
-            : j
-        )
-      );
-      setNewCount((c) =>
-        // adjust “new” count if you care
-        status === "new"
-          ? c + 1
-          : jobs.find((j) => j.job_id === jobId)?.status === "new"
-          ? c - 1
-          : c
-      );
-  
-      // 2) Fire & forget your API call
       const { error } = await supabase
         .from("user_jobs")
         .update({ status })
         .eq("user_id", session.user.id)
         .eq("job_id", jobId);
-  
       if (error) {
         toast.error("Error updating status");
-        // Optionally roll back on failure
-        await fetchJobs();
         return false;
       }
-  
+      await fetchJobs();
       toast.success("Status updated");
       return true;
     },
-    [session, setJobs, setNewCount]
+    [session, fetchJobs]
   );
-  
 
   const updateStage = useCallback(
     async (jobId: string, stage: JobStage): Promise<boolean> => {
