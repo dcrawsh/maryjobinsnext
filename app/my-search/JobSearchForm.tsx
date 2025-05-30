@@ -593,7 +593,7 @@ const watchTech: string[] = (form.watch('tech_skills')      ?? []) as string[];
     <div className="bg-white rounded-xl p-6 shadow-lg max-w-sm w-full text-center space-y-4">
       <h2 className="text-2xl font-semibold text-gray-900">🎉 Congrats!</h2>
       <p className="text-gray-700">
-        You’ve started a job search. We’ll keep looking and update your dashboard.
+        You’ve started a job search. We’ll keep looking and update your dashboard. This may take a few minutes.
       </p>
       <a href="/my-jobs">
         <Button className="w-full">Go to My Jobs</Button>
