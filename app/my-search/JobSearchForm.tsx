@@ -68,6 +68,8 @@ export default function JobSearchForm({ initialValues }: Props) {
   const [tmpSkill, setTmpSkill] = useState('');
   const [altOptions, setAltOptions] = useState<string[]>([]); // suggestions for Select
   const [skillOptions, setSkillOptions] = useState<string[]>([]);
+  const [showCongrats, setShowCongrats] = useState(false);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -231,6 +233,8 @@ const watchTech: string[] = (form.watch('tech_skills')      ?? []) as string[];
       toast.success('Jobs fetched!');
       form.reset();
       setAlternateTitles([]);
+      setTechSkills([]);
+      setShowCongrats(true);
     } catch (err) {
       console.error(err);
       toast.error('Could not fetch jobs');
@@ -240,6 +244,7 @@ const watchTech: string[] = (form.watch('tech_skills')      ?? []) as string[];
   }
 
   return (
+    <>
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -576,12 +581,27 @@ const watchTech: string[] = (form.watch('tech_skills')      ?? []) as string[];
 
         <Button
           type="submit"
-          disabled={saving}
+          disabled={saving || showCongrats}
           className="w-full"
         >
           {saving ? 'Sending…' : 'Find Jobs'}
         </Button>
       </form>
     </Form>
+    {showCongrats && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+    <div className="bg-white rounded-xl p-6 shadow-lg max-w-sm w-full text-center space-y-4">
+      <h2 className="text-2xl font-semibold text-gray-900">🎉 Congrats!</h2>
+      <p className="text-gray-700">
+        You’ve started a job search. We’ll keep looking and update your dashboard.
+      </p>
+      <a href="/my-jobs">
+        <Button className="w-full">Go to My Jobs</Button>
+      </a>
+    </div>
+  </div>
+)}
+
+    </>
   );
 }
