@@ -64,16 +64,136 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────── */}
-      <section id="how-it-works" className="container mx-auto px-4 py-16 flex flex-col items-center">
-        <h2 className="text-3xl font-bold text-center mb-8">How It Works</h2>
-        <ol className="max-w-3xl mx-auto space-y-4 list-decimal pl-6 text-lg">
-          <li>Sign up and upload your resume.</li>
-          <li>Answer a free quiz to refine matching.</li>
-          <li>Review your personalized job board.</li>
-          <li>Track applications with our built‑in Kanban.</li>
-        </ol>
-      </section>
+      <section id="how-it-works" className="container mx-auto px-4 py-16">
+  <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+  
+  <div className="max-w-6xl mx-auto space-y-12">
+    {/* Step 1: Sign Up */}
+    <div className="flex flex-col md:flex-row items-center gap-8">
+      <div className="md:w-1/2">
+        <div className="bg-blue-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <span className="text-blue-600 font-bold text-xl">1</span>
+        </div>
+        <h3 className="text-2xl font-semibold mb-4">Sign Up</h3>
+        <p className="text-lg text-gray-600 mb-4">
+          Create your account in seconds. Just provide your name, email, and password to get started.
+        </p>
+        <a 
+          href="https://maryjobins.com/auth" 
+          className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Get Started →
+        </a>
+      </div>
+      <div className="md:w-1/2">
+        <img 
+          src="/screenshots/how-it-works/01-signup-form.png" 
+          alt="MaryJobins signup form"
+          className="rounded-lg shadow-lg w-full"
+        />
+      </div>
+    </div>
+
+    {/* Step 2: Take Quiz */}
+    <div className="flex flex-col md:flex-row-reverse items-center gap-8">
+      <div className="md:w-1/2">
+        <div className="bg-green-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <span className="text-green-600 font-bold text-xl">2</span>
+        </div>
+        <h3 className="text-2xl font-semibold mb-4">Take the Quiz</h3>
+        <p className="text-lg text-gray-600">
+          Tell us about your ideal role and preferences. Our smart matching algorithm will use this to find the perfect jobs for you.
+        </p>
+      </div>
+      <div className="md:w-1/2">
+        <img 
+          src="/screenshots/how-it-works/02-job-quiz.png" 
+          alt="Job search quiz interface"
+          className="rounded-lg shadow-lg w-full"
+        />
+      </div>
+    </div>
+
+    {/* Step 3: Quiz Completion */}
+    <div className="flex flex-col md:flex-row items-center gap-8">
+      <div className="md:w-1/2">
+        <div className="bg-purple-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <span className="text-purple-600 font-bold text-xl">3</span>
+        </div>
+        <h3 className="text-2xl font-semibold mb-4">You're All Set!</h3>
+        <p className="text-lg text-gray-600">
+          Congratulations! Your job search is now active. We'll start finding and curating jobs that match your preferences.
+        </p>
+      </div>
+      <div className="md:w-1/2">
+        <img 
+          src="/screenshots/how-it-works/03-quiz-completion-congrats.png" 
+          alt="Quiz completion congratulations"
+          className="rounded-lg shadow-lg w-full"
+        />
+      </div>
+    </div>
+
+    {/* Step 4: Jobs Flow In */}
+    <div className="flex flex-col md:flex-row-reverse items-center gap-8">
+      <div className="md:w-1/2">
+        <div className="bg-orange-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <span className="text-orange-600 font-bold text-xl">4</span>
+        </div>
+        <h3 className="text-2xl font-semibold mb-4">Jobs Start Flowing In!</h3>
+        <p className="text-lg text-gray-600">
+          Watch as personalized job opportunities appear in your dashboard. Keep an eye out for new matches – we're constantly finding jobs that fit your profile.
+        </p>
+      </div>
+      <div className="md:w-1/2">
+        <img 
+          src="/screenshots/how-it-works/04-job-listings-detailed-view.png" 
+          alt="Job listings in detailed view"
+          className="rounded-lg shadow-lg w-full"
+        />
+      </div>
+    </div>
+
+    {/* Step 5: Save or Trash */}
+    <div className="flex flex-col md:flex-row items-center gap-8">
+      <div className="md:w-1/2">
+        <div className="bg-red-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <span className="text-red-600 font-bold text-xl">5</span>
+        </div>
+        <h3 className="text-2xl font-semibold mb-4">Save or Trash Jobs</h3>
+        <p className="text-lg text-gray-600">
+          Quickly organize your opportunities in our intuitive list view. Save jobs you're interested in, mark others as not relevant, and keep your pipeline clean.
+        </p>
+      </div>
+      <div className="md:w-1/2">
+        <img 
+          src="/screenshots/how-it-works/05-job-listings-kanban-view.png" 
+          alt="Job listings in Kanban list view"
+          className="rounded-lg shadow-lg w-full"
+        />
+      </div>
+    </div>
+
+    {/* Step 6: Track with Kanban */}
+    <div className="flex flex-col md:flex-row-reverse items-center gap-8">
+      <div className="md:w-1/2">
+        <div className="bg-indigo-50 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+          <span className="text-indigo-600 font-bold text-xl">6</span>
+        </div>
+        <h3 className="text-2xl font-semibold mb-4">Track Applications with Kanban</h3>
+        <p className="text-lg text-gray-600">
+          Switch to our built-in Kanban view to track your application progress. Move jobs through different stages from "New" to "Applied" and beyond.
+        </p>
+      </div>
+      <div className="md:w-1/2">
+        <div className="bg-gray-100 rounded-lg shadow-lg p-8 text-center">
+          <p className="text-gray-500 italic">Kanban tracking view screenshot</p>
+          <small className="text-gray-400">(Use the same image as step 5, or capture a different Kanban view if available)</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* ── FAQ ──────────────────────────────────────────────── */}
       <section id="faq" className="container mx-auto px-4 py-16">
