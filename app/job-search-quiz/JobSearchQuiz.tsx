@@ -1,7 +1,7 @@
+// components/JobSearchQuiz.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,162 +22,30 @@ import {
   Globe,
   FileText,
 } from "lucide-react";
-import { useDropzone } from "react-dropzone";
-import { useSession } from "@/hooks/useSession";
-import { toast } from "sonner";
-
-import type { QuizValues, Step } from "./constants";
-import { quizSteps } from "./constants";
-
-// Map each step to an icon for a more visual progress indicator
-const STEP_ICONS: Record<string, JSX.Element> = {
-  job_title: <Briefcase className="w-5 h-5" />,
-  alternate_titles: <List className="w-5 h-5" />,
-  tech_skills: <Code className="w-5 h-5" />,
-  years_of_experience: <Calendar className="w-5 h-5" />,
-  location: <MapPin className="w-5 h-5" />,
-  skill_level: <Star className="w-5 h-5" />,
-  remote_preference: <Globe className="w-5 h-5" />,
-  resume_data: <FileText className="w-5 h-5" />,
-};
+import { Controller } from "react-hook-form";
+import { useJobSearchQuiz } from "./useJobSearchQuiz";
+import { STEP_ICONS } from "./icon-controller";
 
 export default function JobSearchQuiz() {
-  const { session } = useSession({ isProtectedRoute: true });
-  const [step, setStep] = useState<number>(0);
-  const [options, setOptions] = useState<{ code: string; name: string }[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [searchOpt, setSearchOpt] = useState<string>("");
-  const [showCongrats, setShowCongrats] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const { control, handleSubmit, watch, setValue, getValues } = useForm<QuizValues>({
-    defaultValues: {
-      job_title: "",
-      alternate_titles: [],
-      tech_skills: [],
-      years_of_experience: "",
-      location: "",
-      skill_level: "",
-      remote_preference: "",
-      resume_data: "",
-    },
-  });
-
-  const current: Step = quizSteps[step];
-  const jobTitle = watch("job_title");
-  const altCodes = watch("alternate_titles");
-
-  useEffect(() => {
-    const isAlternateTitlesStep = current.id === "alternate_titles";
-    const isTechSkillsStep = current.id === "tech_skills";
-  
-    if (!isAlternateTitlesStep && !isTechSkillsStep) {
-      setOptions([]);
-      return;
-    }
-  
-    if (isAlternateTitlesStep && jobTitle.trim().length < 2) {
-      setOptions([]);
-      return;
-    }
-  
-    // Only fetch when step changes (on landing), not while toggling
-    let ignore = false;
-    setLoading(true);
-  
-    const fetchOptions = async () => {
-      try {
-        let url = "";
-        if (isAlternateTitlesStep) {
-          url = `/api/alternate-titles?query=${encodeURIComponent(jobTitle.trim())}`;
-        } else {
-          const params = new URLSearchParams({ title: jobTitle.trim() });
-          if (altCodes.length) params.set("codes", altCodes.join(","));
-          url = `/api/tech-skills?${params.toString()}`;
-        }
-  
-        const res = await fetch(url);
-        const body = await res.json();
-  
-        if (ignore) return;
-  
-        if (body.titles) {
-          setOptions(body.titles.map((t: string) => ({ code: t, name: t })));
-        } else if (body.tools) {
-          setOptions(body.tools);
-        } else {
-          setOptions([]);
-        }
-      } catch {
-        if (!ignore) setOptions([]);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    };
-  
-    fetchOptions();
-  
-    return () => {
-      ignore = true;
-    };
-  }, [step]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: async (files) => {
-      const file = files[0];
-      if (!file) return;
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const res = await fetch("/api/parse-resume", {
-          method: "POST",
-          body: formData,
-        });
-        const body = await res.json();
-        setValue("resume_data", body.text);
-      } catch {}
-    },
-    multiple: false,
-    accept: { "application/pdf": [], "text/plain": [] },
-  });
-
-  const onNext = async (data: QuizValues) => {
-    if (
-      (current.id === "alternate_titles" && data.alternate_titles.length === 0) ||
-      (current.id === "tech_skills" && data.tech_skills.length === 0)
-    ) {
-      return;
-    }
-
-    setValue(current.id, data[current.id]);
-
-    if (step === quizSteps.length - 1) {
-      if (!session?.access_token) {
-        toast.error("Please sign in to continue");
-        return;
-      }
-
-      setIsSubmitting(true);
-      setShowCongrats(true); // Always show modal
-
-      const payload = { searches: [getValues()] };
-      fetch("/api/process-searches", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(payload),
-      }).catch((err) => {
-        console.error("Job fetch failed", err);
-        toast.error("Background job sync failed");
-      });
-
-      return;
-    }
-    setSearchOpt("")
-    setStep((prev) => prev + 1);
-  };
+  const {
+    control,
+    handleSubmit,
+    onNext,
+    current,
+    step,
+    setStep,
+    options,
+    loading,
+    searchOpt,
+    setSearchOpt,
+    showCongrats,
+    isValid,
+    isSubmitting,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    quizSteps,
+  } = useJobSearchQuiz();
 
   const renderField = () => {
     switch (current.type) {
@@ -192,7 +60,6 @@ export default function JobSearchQuiz() {
             )}
           />
         );
-
       case "related":
       case "multi-select":
         if (loading) return <p>Loading…</p>;
@@ -210,24 +77,24 @@ export default function JobSearchQuiz() {
                   <Input
                     value={searchOpt}
                     onChange={(e) => setSearchOpt(e.target.value)}
-                    placeholder="Search..."
+                    placeholder="Search…"
                     className="mb-2"
                   />
                   <div className="max-h-60 overflow-y-auto space-y-2">
                     {filtered.map((opt) => {
                       const val = opt.name;
                       const selected = values.includes(val);
-                      const toggle = () => {
-                        const next = selected
-                          ? values.filter((v: string) => v !== val)
-                          : [...values, val].slice(0, current.max);
-                        field.onChange(next);
-                      };
                       return (
                         <button
                           key={val}
                           type="button"
-                          onClick={toggle}
+                          onClick={() =>
+                            field.onChange(
+                              selected
+                                ? values.filter((v) => v !== val)
+                                : [...values, val].slice(0, current.max)
+                            )
+                          }
                           className={`w-full text-left px-3 py-2 border rounded ${
                             selected
                               ? "bg-primary text-primary-foreground"
@@ -244,7 +111,6 @@ export default function JobSearchQuiz() {
             }}
           />
         );
-
       case "select":
         return (
           <Controller
@@ -267,7 +133,6 @@ export default function JobSearchQuiz() {
             )}
           />
         );
-
       case "file":
         return (
           <>
@@ -298,55 +163,61 @@ export default function JobSearchQuiz() {
             />
           </>
         );
-
-      default:
-        return null;
     }
   };
-
-  const renderSteps = () => (
-    <div className="flex justify-center items-center space-x-4 mb-4">
-      {quizSteps.map((stepDef, idx) => {
-        const Icon = STEP_ICONS[stepDef.id];
-        const isActive = idx === step;
-        return (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => setStep(idx)}
-            className={`p-2 rounded-full border-2 transition ${
-              isActive
-                ? "border-primary bg-primary text-white"
-                : "border-gray-300 text-gray-500"
-            }`}
-          >
-            {Icon}
-          </button>
-        );
-      })}
-    </div>
-  );
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow space-y-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Job Search Quiz</h1>
-        {renderSteps()}
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Job Search Quiz
+        </h1>
+        <div className="flex justify-center items-center space-x-4 mb-4">
+          {quizSteps.map((s, i) => {
+            const Icon = STEP_ICONS[s.id];
+            const active = i === step;
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setStep(i)}
+                className={`p-2 rounded-full border-2 transition ${
+                  active
+                    ? "border-primary bg-primary text-white"
+                    : "border-gray-300 text-gray-500"
+                }`}
+              >
+                {Icon}
+              </button>
+            );
+          })}
+        </div>
+
         <motion.div
           key={current.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <h2 className="text-xl font-semibold text-center">{current.title}</h2>
+          <h2 className="text-xl font-semibold text-center">
+            {current.title}
+          </h2>
           {current.hint && (
             <p className="text-center text-muted-foreground">{current.hint}</p>
           )}
 
           <form onSubmit={handleSubmit(onNext)} className="space-y-4">
             {renderField()}
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {step < quizSteps.length - 1 ? "Next" : isSubmitting ? "Submitting..." : "Finish"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!isValid || isSubmitting}
+            >
+              {step < quizSteps.length - 1
+                ? "Next"
+                : isSubmitting
+                ? "Submitting..."
+                : "Finish"}
             </Button>
           </form>
         </motion.div>
@@ -357,7 +228,8 @@ export default function JobSearchQuiz() {
           <div className="bg-white rounded-xl p-6 shadow-lg max-w-sm w-full text-center space-y-4">
             <h2 className="text-2xl font-semibold text-gray-900">🎉 Congrats!</h2>
             <p className="text-gray-700">
-              You've started a job search. We'll keep looking and update your notifications.
+              You've started a job search. We'll keep looking and update your
+              notifications.
             </p>
             <a href="/my-jobs">
               <Button className="w-full">Go to My Jobs</Button>
