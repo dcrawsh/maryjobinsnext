@@ -4,6 +4,7 @@ import React from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import type { Job } from "@/types/my-jobs";
+import { motion } from "framer-motion";
 
 interface Props {
   id: string;
@@ -23,7 +24,8 @@ export default function DraggableCard({ id, job, onSave, onArchive }: Props) {
     : undefined;
 
   return (
-    <li
+    <motion.li
+      layout
       ref={setNodeRef}
       style={style}
       {...attributes}
@@ -36,6 +38,6 @@ export default function DraggableCard({ id, job, onSave, onArchive }: Props) {
           <p className="text-sm text-gray-600">{job.company_name}</p>
         </div>
       </div>
-    </li>
+    </motion.li>
   );
 }
