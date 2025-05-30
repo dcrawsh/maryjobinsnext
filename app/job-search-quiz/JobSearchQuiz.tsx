@@ -1,4 +1,3 @@
-// components/JobSearchQuiz.tsx
 "use client";
 
 import React from "react";
@@ -12,16 +11,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import {
-  Briefcase,
-  List,
-  Code,
-  Calendar,
-  MapPin,
-  Star,
-  Globe,
-  FileText,
-} from "lucide-react";
 import { Controller } from "react-hook-form";
 import { useJobSearchQuiz } from "./useJobSearchQuiz";
 import { STEP_ICONS } from "./icon-controller";
