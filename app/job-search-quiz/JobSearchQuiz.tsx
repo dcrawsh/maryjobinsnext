@@ -31,7 +31,7 @@ import { quizSteps } from "./constants";
 
 // Map each step to an icon for a more visual progress indicator
 const STEP_ICONS: Record<string, JSX.Element> = {
-  job_title: <Briefcase className="w-5 h-5" />,  
+  job_title: <Briefcase className="w-5 h-5" />,
   alternate_titles: <List className="w-5 h-5" />,
   tech_skills: <Code className="w-5 h-5" />,
   years_of_experience: <Calendar className="w-5 h-5" />,
@@ -47,6 +47,8 @@ export default function JobSearchQuiz() {
   const [options, setOptions] = useState<{ code: string; name: string }[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchOpt, setSearchOpt] = useState<string>("");
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, handleSubmit, watch, setValue, getValues } = useForm<QuizValues>({
     defaultValues: {
@@ -65,42 +67,61 @@ export default function JobSearchQuiz() {
   const jobTitle = watch("job_title");
   const altCodes = watch("alternate_titles");
 
-  // Fetch suggestions for related titles & tech skills
   useEffect(() => {
-    if (current.type !== "related" && current.type !== "multi-select") {
+    const isAlternateTitlesStep = current.id === "alternate_titles";
+    const isTechSkillsStep = current.id === "tech_skills";
+  
+    if (!isAlternateTitlesStep && !isTechSkillsStep) {
       setOptions([]);
       return;
     }
-    if (current.id === "alternate_titles" && jobTitle.trim().length < 2) {
+  
+    if (isAlternateTitlesStep && jobTitle.trim().length < 2) {
       setOptions([]);
       return;
     }
-
-    let url = "";
-    if (current.id === "alternate_titles") {
-      url = `/api/alternate-titles?query=${encodeURIComponent(
-        jobTitle.trim()
-      )}`;
-    } else {
-      const params = new URLSearchParams({ title: jobTitle.trim() });
-      if (altCodes.length) params.set("codes", altCodes.join(","));
-      url = `/api/tech-skills?${params.toString()}`;
-    }
-
+  
+    // Only fetch when step changes (on landing), not while toggling
+    let ignore = false;
     setLoading(true);
-    fetch(url)
-      .then((res) => res.json())
-      .then((body) => {
-        if (body.titles)
+  
+    const fetchOptions = async () => {
+      try {
+        let url = "";
+        if (isAlternateTitlesStep) {
+          url = `/api/alternate-titles?query=${encodeURIComponent(jobTitle.trim())}`;
+        } else {
+          const params = new URLSearchParams({ title: jobTitle.trim() });
+          if (altCodes.length) params.set("codes", altCodes.join(","));
+          url = `/api/tech-skills?${params.toString()}`;
+        }
+  
+        const res = await fetch(url);
+        const body = await res.json();
+  
+        if (ignore) return;
+  
+        if (body.titles) {
           setOptions(body.titles.map((t: string) => ({ code: t, name: t })));
-        else if (body.tools) setOptions(body.tools);
-        else setOptions([]);
-      })
-      .catch(() => setOptions([]))
-      .finally(() => setLoading(false));
-  }, [current.id, jobTitle, altCodes]);
+        } else if (body.tools) {
+          setOptions(body.tools);
+        } else {
+          setOptions([]);
+        }
+      } catch {
+        if (!ignore) setOptions([]);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+  
+    fetchOptions();
+  
+    return () => {
+      ignore = true;
+    };
+  }, [step]);
 
-  // Resume dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: async (files) => {
       const file = files[0];
@@ -108,7 +129,10 @@ export default function JobSearchQuiz() {
       const formData = new FormData();
       formData.append("file", file);
       try {
-        const res = await fetch("/api/parse-resume", { method: "POST", body: formData });
+        const res = await fetch("/api/parse-resume", {
+          method: "POST",
+          body: formData,
+        });
         const body = await res.json();
         setValue("resume_data", body.text);
       } catch {}
@@ -117,7 +141,6 @@ export default function JobSearchQuiz() {
     accept: { "application/pdf": [], "text/plain": [] },
   });
 
-  // Next / Submit handler
   const onNext = async (data: QuizValues) => {
     if (
       (current.id === "alternate_titles" && data.alternate_titles.length === 0) ||
@@ -125,6 +148,7 @@ export default function JobSearchQuiz() {
     ) {
       return;
     }
+
     setValue(current.id, data[current.id]);
 
     if (step === quizSteps.length - 1) {
@@ -132,30 +156,29 @@ export default function JobSearchQuiz() {
         toast.error("Please sign in to continue");
         return;
       }
-      try {
-        const payload = { searches: [getValues()] };
-        const res = await fetch("/api/process-searches", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(await res.text());
-        const jobs = await res.json();
-        toast.success(`Found ${jobs.length} jobs!`);
-      } catch (err: any) {
-        console.error(err);
-        toast.error("Failed to fetch jobs");
-      }
+
+      setIsSubmitting(true);
+      setShowCongrats(true); // Always show modal
+
+      const payload = { searches: [getValues()] };
+      fetch("/api/process-searches", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+      }).catch((err) => {
+        console.error("Job fetch failed", err);
+        toast.error("Background job sync failed");
+      });
+
       return;
     }
-
+    setSearchOpt("")
     setStep((prev) => prev + 1);
   };
 
-  // Render input or selection fields
   const renderField = () => {
     switch (current.type) {
       case "text":
@@ -179,7 +202,6 @@ export default function JobSearchQuiz() {
             control={control}
             render={({ field }) => {
               const values = Array.isArray(field.value) ? field.value : [];
-              // filter options by search term
               const filtered = options.filter((opt) =>
                 opt.name.toLowerCase().includes(searchOpt.toLowerCase())
               );
@@ -282,7 +304,6 @@ export default function JobSearchQuiz() {
     }
   };
 
-  // Render the progress step icons
   const renderSteps = () => (
     <div className="flex justify-center items-center space-x-4 mb-4">
       {quizSteps.map((stepDef, idx) => {
@@ -294,7 +315,9 @@ export default function JobSearchQuiz() {
             type="button"
             onClick={() => setStep(idx)}
             className={`p-2 rounded-full border-2 transition ${
-              isActive ? 'border-primary bg-primary text-white' : 'border-gray-300 text-gray-500'
+              isActive
+                ? "border-primary bg-primary text-white"
+                : "border-gray-300 text-gray-500"
             }`}
           >
             {Icon}
@@ -307,7 +330,7 @@ export default function JobSearchQuiz() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Job Search Quiz</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Job Search Quiz</h1>
         {renderSteps()}
         <motion.div
           key={current.id}
@@ -322,12 +345,26 @@ export default function JobSearchQuiz() {
 
           <form onSubmit={handleSubmit(onNext)} className="space-y-4">
             {renderField()}
-            <Button type="submit" className="w-full">
-              {step < quizSteps.length - 1 ? "Next" : "Finish"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {step < quizSteps.length - 1 ? "Next" : isSubmitting ? "Submitting..." : "Finish"}
             </Button>
           </form>
         </motion.div>
       </div>
+
+      {showCongrats && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 shadow-lg max-w-sm w-full text-center space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-900">🎉 Congrats!</h2>
+            <p className="text-gray-700">
+              You've started a job search. We'll keep looking and update your notifications.
+            </p>
+            <a href="/my-jobs">
+              <Button className="w-full">Go to My Jobs</Button>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
